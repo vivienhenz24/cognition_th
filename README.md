@@ -4,7 +4,7 @@ hi this is my devin take home:
 
 Screen recording of the KYC Review Queue prototype built in Power Apps with Devin:
 
-https://github.com/user-attachments/assets/PASTE-UPLOADED-VIDEO-URL-HERE
+https://github.com/user-attachments/assets/6fcde944-62c8-4954-8730-af42a3042691
 
 (Download: [Cognition_TH_Prototype_demo.mp4](./Cognition_TH_Prototype_demo.mp4))
 
