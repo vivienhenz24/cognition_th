@@ -1,67 +1,92 @@
-# Devin + Power Apps: KYC Review Queue prototype
+# Devin + Power Apps starter kit
 
-This repo is my Cognition take-home. The question: can a fintech team use Devin to build the internal tools they currently make in Microsoft Power Apps?
+Build Power Apps canvas apps with Devin. Devin writes the app's source files, checks them, and pushes them into Power Apps Studio. You never edit the app by hand.
 
-To test that, I had Devin build one of their real apps, a KYC review queue, directly inside Power Apps. Devin writes the app's source files, checks them, and pushes them into Power Apps Studio through Microsoft's own authoring tool.
-
-## Demo
+Demo of a finished app (a KYC review queue):
 
 https://github.com/user-attachments/assets/6fcde944-62c8-4954-8730-af42a3042691
 
-Download: [Cognition_TH_Prototype_demo.mp4](./Cognition_TH_Prototype_demo.mp4)
+## What you need
 
-## What the app does
+- A Mac or Linux machine.
+- .NET 10 SDK. Install without admin rights:
+  ```bash
+  curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0 --install-dir $HOME/.dotnet
+  ```
+- The Devin CLI, logged in (`devin auth login`).
+- A Microsoft work or school account with access to Power Apps. A free developer plan works: https://aka.ms/PowerAppsDevPlan
 
-A compliance reviewer opens the app and sees:
+## Setup
 
-- **Dashboard.** Counts of pending, approved-today, and rejected-today requests. A list of pending requests with a colour-coded risk score. Search by name and filter by risk level.
-- **Review screen.** All details of one request, a notes box, and Approve / Reject buttons. High-risk approvals need a supervisor email. Rejections need notes. Every decision writes an audit log entry.
-- **History.** Every reviewed request with who reviewed it and when. Filter by status.
+### 1. Check your machine
 
-Data is seeded in memory when the app starts, since this environment has no database.
+```bash
+./setup.sh
+```
+
+Prints a tick or cross for each requirement, with the install command for anything missing.
+
+### 2. Install the Power Apps plugin into Devin
+
+```bash
+./connect.sh
+```
+
+Installs Microsoft's `canvas-apps` plugin and starts the Canvas Authoring server once to confirm it works. The first run downloads the server from NuGet, so it can take a minute.
+
+### 3. Create an empty app in Power Apps
+
+1. Go to https://make.powerapps.com
+2. Create a blank canvas app (tablet layout) and save it, for example as "KYC Review Queue".
+3. Open Settings, then Updates, and turn on **Coauthoring**.
+4. Keep this browser tab open. Devin syncs into it.
+
+### 4. Copy the app IDs into the prompt
+
+The address bar of the open app looks like this:
+
+```
+https://make.powerapps.com/e/<ENVIRONMENT_ID>/canvas/?action=edit&app-id=<APP_ID>
+```
+
+Open `kyc-example/PROMPT.md` and paste both values under "Connection values". Set `WORKDIR` to the folder where the generated files should go.
+
+### 5. Run Devin
+
+```bash
+devin --prompt-file kyc-example/PROMPT.md
+```
+
+Devin will:
+
+1. Sign in to Microsoft. A browser window opens once.
+2. Sync the current app state to `WORKDIR`.
+3. Write one `.pa.yaml` file per screen plus `App.pa.yaml`.
+4. Compile, fix errors, and repeat until clean.
+5. Sync the finished app into your open Studio tab.
+
+### 6. Test the app
+
+Press Play in Power Apps Studio.
+
+## Building a different app
+
+Copy `kyc-example/PROMPT.md`, keep the top section (connection values and the line that points to the skill), and replace the spec below it with your own. Run step 5 again with the new file.
 
 ## What is in this repo
 
-| Path | What it is |
+| Path | Purpose |
 |---|---|
-| `kyc-example/PROMPT.md` | The task given to Devin: the app spec plus connection IDs. |
-| `kyc-example/generated/` | The Power Apps source files Devin wrote (`.pa.yaml`, one per screen). |
-| `skills/power-apps-canvas-authoring/` | The playbook Devin follows: how to connect, write valid YAML, and fix compile errors. Includes a small checker script. |
-| `setup.sh` | Checks you have the tools installed. |
-| `connect.sh` | Installs Microsoft's Power Apps plugin into Devin and confirms it boots. |
-| `.devin/mcp_config.json` | Tells Devin how to start Microsoft's Canvas Authoring server. |
+| `setup.sh` | Prerequisite checker. |
+| `connect.sh` | Installs the plugin and smoke-tests the server. |
+| `.devin/mcp_config.json` | How Devin starts Microsoft's Canvas Authoring server. |
+| `skills/power-apps-canvas-authoring/` | The rules Devin follows: connecting, writing valid YAML, fixing compile errors. `scripts/check-yaml.sh` catches common mistakes before compiling. |
+| `kyc-example/PROMPT.md` | Example prompt. App spec plus connection values. |
+| `kyc-example/generated/` | The files Devin produced for the example app. |
 
-## How to run it
+## Troubleshooting
 
-You need: .NET 10 SDK, the Devin CLI (logged in), and a Microsoft work or school account with Power Apps.
-
-1. **Check prerequisites.**
-   ```bash
-   ./setup.sh
-   ```
-   It tells you what is missing and how to install it.
-
-2. **Install the Power Apps plugin into Devin.**
-   ```bash
-   ./connect.sh
-   ```
-
-3. **Create an empty app in Power Apps.** In the browser, go to https://make.powerapps.com.
-   Create a blank canvas app (tablet) and save it. In Settings, turn on "Coauthoring". Keep the tab open.
-
-4. **Copy the IDs.** The address bar looks like
-   `https://make.powerapps.com/e/<ENVIRONMENT_ID>/canvas/?action=edit&app-id=<APP_ID>`.
-   Paste both IDs into `kyc-example/PROMPT.md` under "Connection values".
-
-5. **Hand it to Devin.**
-   ```bash
-   devin --prompt-file kyc-example/PROMPT.md
-   ```
-   Devin signs in to Microsoft (a browser window opens), writes the four source files, compiles them until there are no errors, and syncs the app into your open Studio tab.
-
-6. **Try it.** Press Play in Power Apps Studio.
-
-## Notes
-
-- Devin never touches the Power Apps UI. It only writes source files and calls Microsoft's authoring server, so every change is reviewable text.
-- The `skills` folder is the important part. It captures the rules that made the build succeed on the first compile pass, so the next app is cheaper than the first.
+- **Server does not start.** Run `dotnet --list-sdks`. You need a 10.x entry. Check `DOTNET_ROOT` points to where you installed it.
+- **Sign-in fails with 401 or 403.** Devin retries once with the account picker. Pick the account that owns the Power Apps environment.
+- **App does not appear in Studio.** Make sure Coauthoring is on and the Studio tab is still open.
+- **Compile errors.** Devin fixes them itself. If it stops with errors left, read `skills/power-apps-canvas-authoring/SKILL.md` section 7. Every known error is listed with its fix.
