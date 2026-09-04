@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "canvas-authoring": {
+      "command": "/Users/vivienhenz/.dotnet/dnx",
+      "args": ["Microsoft.PowerApps.CanvasAuthoring.McpServer", "--yes", "--prerelease"],
+      "env": {
+        "DOTNET_ROOT": "/Users/vivienhenz/.dotnet",
+        "PATH": "/Users/vivienhenz/.dotnet:/Users/vivienhenz/.dotnet/tools:/usr/local/bin:/usr/bin:/bin"
+      }
+    }
+  }
+}

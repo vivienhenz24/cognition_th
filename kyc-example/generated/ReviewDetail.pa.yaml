@@ -1,0 +1,242 @@
+Screens:
+  ReviewDetail:
+    Properties:
+      Fill: =Theme.Background
+    Children:
+      - conDetailRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            Fill: =Theme.Background
+            Height: =Parent.Height
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =Space.M
+            LayoutOverflowY: =LayoutOverflow.Scroll
+            PaddingBottom: =Space.L
+            PaddingLeft: =Space.L
+            PaddingRight: =Space.L
+            PaddingTop: =Space.L
+            Width: =Parent.Width
+          Children:
+            - conDetailHeader:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  FillPortions: =0
+                  Height: =48
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =Space.M
+                Children:
+                  - btnDetailBack:
+                      Control: Button
+                      Properties:
+                        AccessibleLabel: ="Back to dashboard"
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        OnSelect: |-
+                          =Set(varConfirmMode, "");
+                          Back()
+                        Text: ="Back"
+                        Width: =100
+                  - lblDetailTitle:
+                      Control: Label
+                      Properties:
+                        Color: =Theme.Text
+                        FillPortions: =1
+                        FontWeight: =FontWeight.Bold
+                        Size: =22
+                        Text: =If(IsBlank(varSelected), "No request selected", "Review " & varSelected.customer_name)
+                  - lblDetailRiskBadge:
+                      Control: Label
+                      Properties:
+                        Align: =Align.Center
+                        Color: =Theme.White
+                        Fill: =LookUp(RiskBands, varSelected.risk_score >= Min And varSelected.risk_score <= Max).Color
+                        FontWeight: =FontWeight.Bold
+                        Height: =36
+                        Size: =14
+                        Text: =LookUp(RiskBands, varSelected.risk_score >= Min And varSelected.risk_score <= Max).Name & " risk " & varSelected.risk_score
+                        Visible: =Not(IsBlank(varSelected))
+                        Width: =160
+            - lblDetailNoSelection:
+                Control: Label
+                Properties:
+                  Color: =Theme.TextMuted
+                  Text: ="Go back to the dashboard and pick a request to review."
+                  Visible: =IsBlank(varSelected)
+            - galDetailFields:
+                Control: Gallery
+                Variant: Vertical
+                Properties:
+                  AccessibleLabel: ="Request details"
+                  FillPortions: =0
+                  Height: =270
+                  Items: |-
+                    =Table(
+                      {Label: "Request ID", Value: Text(varSelected.id)},
+                      {Label: "Customer", Value: varSelected.customer_name},
+                      {Label: "Email", Value: varSelected.customer_email},
+                      {Label: "Risk score", Value: Text(varSelected.risk_score) & " of 10"},
+                      {Label: "Submitted", Value: Text(varSelected.submission_date, "yyyy-mm-dd")},
+                      {Label: "Status", Value: varSelected.status}
+                    )
+                  ShowScrollbar: =false
+                  TemplatePadding: =0
+                  TemplateSize: =44
+                  Visible: =Not(IsBlank(varSelected))
+                Children:
+                  - conDetailFieldRow:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =Theme.Surface
+                        Height: =Parent.TemplateHeight
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =Space.M
+                        PaddingLeft: =Space.M
+                        PaddingRight: =Space.M
+                        Width: =Parent.TemplateWidth
+                      Children:
+                        - lblDetailFieldLabel:
+                            Control: Label
+                            Properties:
+                              Color: =Theme.TextMuted
+                              FillPortions: =1
+                              Size: =14
+                              Text: =ThisItem.Label
+                        - lblDetailFieldValue:
+                            Control: Label
+                            Properties:
+                              Color: =Theme.Text
+                              FillPortions: =3
+                              Size: =14
+                              Text: =ThisItem.Value
+            - lblDetailNotesLabel:
+                Control: Label
+                Properties:
+                  Color: =Theme.Text
+                  FontWeight: =FontWeight.Semibold
+                  Height: =28
+                  Size: =14
+                  Text: ="Reviewer notes"
+                  Visible: =Not(IsBlank(varSelected))
+            - txtDetailNotes:
+                Control: TextInput
+                Properties:
+                  AccessibleLabel: ="Reviewer notes"
+                  Height: =120
+                  Mode: ='TextInputCanvas.Mode'.Multiline
+                  Placeholder: ="Add your review notes (required to reject)"
+                  Visible: =Not(IsBlank(varSelected))
+            - conDetailActions:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  FillPortions: =0
+                  Height: =44
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =Space.M
+                  Visible: =Not(IsBlank(varSelected)) And IsBlank(varConfirmMode)
+                Children:
+                  - btnDetailApprove:
+                      Control: Button
+                      Properties:
+                        AccessibleLabel: ="Approve request"
+                        Appearance: ='ButtonCanvas.Appearance'.Primary
+                        OnSelect: |-
+                          =Set(varConfirmMode, "Approve");
+                          If(varSelected.risk_score <= 7, Select(btnDetailConfirm))
+                        Text: ="Approve"
+                        Width: =140
+                  - btnDetailReject:
+                      Control: Button
+                      Properties:
+                        AccessibleLabel: ="Reject request"
+                        Appearance: ='ButtonCanvas.Appearance'.Outline
+                        OnSelect: =Set(varConfirmMode, "Reject")
+                        Text: ="Reject"
+                        Width: =140
+            - conDetailConfirm:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =Theme.Border
+                  BorderThickness: =1
+                  Fill: =Theme.Surface
+                  FillPortions: =0
+                  Height: =220
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =Space.M
+                  PaddingBottom: =Space.M
+                  PaddingLeft: =Space.M
+                  PaddingRight: =Space.M
+                  PaddingTop: =Space.M
+                  Visible: =Not(IsBlank(varConfirmMode))
+                Children:
+                  - lblDetailConfirmTitle:
+                      Control: Label
+                      Properties:
+                        Color: =If(varConfirmMode = "Reject", Theme.Danger, Theme.Primary)
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        Size: =16
+                        Text: =If(varConfirmMode = "Reject", "Confirm rejection", "Confirm approval")
+                  - lblDetailConfirmBody:
+                      Control: Label
+                      Properties:
+                        AutoHeight: =true
+                        Color: =Theme.TextMuted
+                        Size: =14
+                        Text: |-
+                          =If(varConfirmMode = "Reject",
+                            "Rejecting " & varSelected.customer_name & ". Reviewer notes are required.",
+                            "This is a high-risk request (score " & varSelected.risk_score & "). A supervisor email is required to approve."
+                          )
+                  - txtDetailSupervisor:
+                      Control: TextInput
+                      Properties:
+                        AccessibleLabel: ="Supervisor email"
+                        Placeholder: ="Supervisor email, for example name@company.com"
+                        Visible: =varConfirmMode = "Approve" And varSelected.risk_score > 7
+                  - conDetailConfirmButtons:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        FillPortions: =0
+                        Height: =44
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =Space.M
+                      Children:
+                        - btnDetailConfirm:
+                            Control: Button
+                            Properties:
+                              AccessibleLabel: ="Confirm decision"
+                              Appearance: ='ButtonCanvas.Appearance'.Primary
+                              OnSelect: |-
+                                =If(varConfirmMode = "Reject" And IsBlank(Trim(txtDetailNotes.Value)),
+                                  Notify("Reviewer notes are required to reject a request.", NotificationType.Error),
+                                  varConfirmMode = "Approve" And varSelected.risk_score > 7 And Not("@" in txtDetailSupervisor.Value),
+                                  Notify("Enter a valid supervisor email before approving a high-risk request.", NotificationType.Error),
+                                  Patch(KYC_Requests, LookUp(KYC_Requests, id = varSelected.id),
+                                    {status: If(varConfirmMode = "Reject", "Rejected", "Approved"),
+                                     reviewed_by: User().Email, reviewed_date: Now(), reviewer_notes: txtDetailNotes.Value});
+                                  Collect(Audit_Log,
+                                    {action_type: varConfirmMode, user: User().Email, timestamp: Now(), record_id: varSelected.id, details:
+                                              "Status Pending -> " & If(varConfirmMode = "Reject", "Rejected", "Approved") &
+                                              If(IsBlank(txtDetailSupervisor.Value), "", "; supervisor " & txtDetailSupervisor.Value) &
+                                              "; notes: " & txtDetailNotes.Value});
+                                  Notify("Request for " & varSelected.customer_name & " " & If(varConfirmMode = "Reject", "rejected", "approved") & ".", NotificationType.Success);
+                                  Set(varConfirmMode, "");
+                                  Back()
+                                )
+                              Text: =If(varConfirmMode = "Reject", "Confirm reject", "Confirm approve")
+                              Width: =160
+                        - btnDetailCancel:
+                            Control: Button
+                            Properties:
+                              AccessibleLabel: ="Cancel decision"
+                              Appearance: ='ButtonCanvas.Appearance'.Subtle
+                              OnSelect: =Set(varConfirmMode, "")
+                              Text: ="Cancel"
+                              Width: =100

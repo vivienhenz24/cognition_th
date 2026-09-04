@@ -1,0 +1,120 @@
+Screens:
+  History:
+    Properties:
+      Fill: =Theme.Background
+    Children:
+      - conHistRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            Fill: =Theme.Background
+            Height: =Parent.Height
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =Space.M
+            PaddingBottom: =Space.L
+            PaddingLeft: =Space.L
+            PaddingRight: =Space.L
+            PaddingTop: =Space.L
+            Width: =Parent.Width
+          Children:
+            - conHistHeader:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  FillPortions: =0
+                  Height: =48
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =Space.M
+                Children:
+                  - btnHistBack:
+                      Control: Button
+                      Properties:
+                        AccessibleLabel: ="Back to dashboard"
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        OnSelect: =Back()
+                        Text: ="Back"
+                        Width: =100
+                  - lblHistTitle:
+                      Control: Label
+                      Properties:
+                        Color: =Theme.Text
+                        FillPortions: =1
+                        FontWeight: =FontWeight.Bold
+                        Size: =22
+                        Text: ="Review history"
+                  - ddHistStatus:
+                      Control: DropDown
+                      Properties:
+                        AccessibleLabel: ="Filter by status"
+                        DefaultSelectedItems: |-
+                          =Table({Value: "All"})
+                        Items: =["All", "Approved", "Rejected"]
+                        Width: =200
+            - lblHistEmpty:
+                Control: Label
+                Properties:
+                  Color: =Theme.TextMuted
+                  Text: ="No reviewed requests yet. Approve or reject a request from the dashboard."
+                  Visible: =galHistReviewed.AllItemsCount = 0
+            - galHistReviewed:
+                Control: Gallery
+                Variant: Vertical
+                Properties:
+                  AccessibleLabel: ="Reviewed KYC requests"
+                  Items: |-
+                    =SortByColumns(
+                      Filter(ReviewedRequests,
+                        IsBlank(ddHistStatus.Selected.Value)
+                          Or ddHistStatus.Selected.Value = "All"
+                          Or status = ddHistStatus.Selected.Value
+                      ),
+                      "reviewed_date", SortOrder.Descending
+                    )
+                  TemplatePadding: =Space.XS
+                  TemplateSize: =72
+                Children:
+                  - conHistRow:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =Theme.Surface
+                        Height: =Parent.TemplateHeight
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =Space.M
+                        PaddingLeft: =Space.M
+                        PaddingRight: =Space.M
+                        Width: =Parent.TemplateWidth
+                      Children:
+                        - lblHistRowName:
+                            Control: Label
+                            Properties:
+                              Color: =Theme.Text
+                              FillPortions: =2
+                              FontWeight: =FontWeight.Semibold
+                              Size: =16
+                              Text: =ThisItem.customer_name
+                        - lblHistRowStatus:
+                            Control: Label
+                            Properties:
+                              Color: =If(ThisItem.status = "Approved", Theme.Success, Theme.Danger)
+                              FillPortions: =1
+                              FontWeight: =FontWeight.Bold
+                              Size: =14
+                              Text: =ThisItem.status
+                        - lblHistRowReviewer:
+                            Control: Label
+                            Properties:
+                              Color: =Theme.TextMuted
+                              FillPortions: =2
+                              Size: =14
+                              Text: =ThisItem.reviewed_by
+                        - lblHistRowDate:
+                            Control: Label
+                            Properties:
+                              Align: =Align.Right
+                              Color: =Theme.TextMuted
+                              FillPortions: =2
+                              Size: =14
+                              Text: =If(IsBlank(ThisItem.reviewed_date), "-", Text(ThisItem.reviewed_date, "yyyy-mm-dd hh:mm"))

@@ -1,0 +1,192 @@
+Screens:
+  Screen1:
+    Properties:
+      Fill: =Theme.Background
+    Children:
+      - conDashRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            Fill: =Theme.Background
+            Height: =Parent.Height
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =Space.M
+            PaddingBottom: =Space.L
+            PaddingLeft: =Space.L
+            PaddingRight: =Space.L
+            PaddingTop: =Space.L
+            Width: =Parent.Width
+          Children:
+            - conDashHeader:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  FillPortions: =0
+                  Height: =48
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =Space.M
+                  LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                Children:
+                  - lblDashTitle:
+                      Control: Label
+                      Properties:
+                        Color: =Theme.Text
+                        FillPortions: =1
+                        FontWeight: =FontWeight.Bold
+                        Size: =24
+                        Text: ="KYC Review Queue"
+                  - btnDashHistory:
+                      Control: Button
+                      Properties:
+                        AccessibleLabel: ="Open review history"
+                        Appearance: ='ButtonCanvas.Appearance'.Secondary
+                        OnSelect: =Navigate(History, ScreenTransition.Fade)
+                        Text: ="History"
+                        Width: =120
+            - galDashKpis:
+                Control: Gallery
+                Variant: Horizontal
+                Properties:
+                  FillPortions: =0
+                  Height: =110
+                  Items: |-
+                    =Table(
+                      {Label: "Pending", Count: CountRows(PendingRequests), Color: Theme.Primary},
+                      {Label: "Approved today", Count: CountRows(ApprovedToday), Color: Theme.Success},
+                      {Label: "Rejected today", Count: CountRows(RejectedToday), Color: Theme.Danger}
+                    )
+                  ShowScrollbar: =false
+                  TemplatePadding: =0
+                  TemplateSize: =240
+                Children:
+                  - conDashKpiCard:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =Theme.Surface
+                        Height: =Parent.TemplateHeight
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =Space.S
+                        PaddingBottom: =Space.M
+                        PaddingLeft: =Space.M
+                        PaddingRight: =Space.M
+                        PaddingTop: =Space.M
+                        RadiusBottomLeft: =Space.S
+                        RadiusBottomRight: =Space.S
+                        RadiusTopLeft: =Space.S
+                        RadiusTopRight: =Space.S
+                        Width: =Parent.TemplateWidth - Space.M
+                      Children:
+                        - lblDashKpiLabel:
+                            Control: Label
+                            Properties:
+                              Color: =Theme.TextMuted
+                              Height: =24
+                              Size: =14
+                              Text: =ThisItem.Label
+                        - lblDashKpiCount:
+                            Control: Label
+                            Properties:
+                              Color: =ThisItem.Color
+                              FillPortions: =1
+                              FontWeight: =FontWeight.Bold
+                              Size: =32
+                              Text: =ThisItem.Count
+            - conDashFilters:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  FillPortions: =0
+                  Height: =44
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =Space.M
+                Children:
+                  - txtDashSearch:
+                      Control: TextInput
+                      Properties:
+                        AccessibleLabel: ="Search pending requests by customer name"
+                        FillPortions: =1
+                        Placeholder: ="Search by customer name"
+                        Type: ='TextInputCanvas.Type'.Search
+                  - ddDashRisk:
+                      Control: DropDown
+                      Properties:
+                        AccessibleLabel: ="Filter by risk level"
+                        DefaultSelectedItems: |-
+                          =Table({Value: "All"})
+                        Items: |-
+                          =Table({Value: "All"}, ShowColumns(RenameColumns(RiskBands, Name, Value), Value))
+                        Width: =200
+            - lblDashLoading:
+                Control: Label
+                Properties:
+                  Color: =Theme.TextMuted
+                  Text: ="Loading requests..."
+                  Visible: =CountRows(KYC_Requests) = 0
+            - lblDashEmpty:
+                Control: Label
+                Properties:
+                  Color: =Theme.TextMuted
+                  Text: ="No pending requests match your search or filter."
+                  Visible: =galDashPending.AllItemsCount = 0 And CountRows(KYC_Requests) > 0
+            - galDashPending:
+                Control: Gallery
+                Variant: Vertical
+                Properties:
+                  AccessibleLabel: ="Pending KYC requests"
+                  Items: |-
+                    =Filter(PendingRequests,
+                      IsBlank(ddDashRisk.Selected.Value)
+                        Or ddDashRisk.Selected.Value = "All"
+                        Or (risk_score >= LookUp(RiskBands, Name = ddDashRisk.Selected.Value).Min
+                            And risk_score <= LookUp(RiskBands, Name = ddDashRisk.Selected.Value).Max),
+                      IsBlank(txtDashSearch.Value) Or txtDashSearch.Value in customer_name
+                    )
+                  OnSelect: |-
+                    =Set(varSelected, ThisItem);
+                    Navigate(ReviewDetail, ScreenTransition.Fade)
+                  TemplatePadding: =Space.XS
+                  TemplateSize: =72
+                Children:
+                  - conDashRow:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =Theme.Surface
+                        Height: =Parent.TemplateHeight
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =Space.M
+                        PaddingLeft: =Space.M
+                        PaddingRight: =Space.M
+                        Width: =Parent.TemplateWidth
+                      Children:
+                        - lblDashRowName:
+                            Control: Label
+                            Properties:
+                              Color: =Theme.Text
+                              FillPortions: =2
+                              FontWeight: =FontWeight.Semibold
+                              OnSelect: =Select(galDashPending)
+                              Size: =16
+                              Text: =ThisItem.customer_name
+                        - lblDashRowRisk:
+                            Control: Label
+                            Properties:
+                              Color: =LookUp(RiskBands, ThisItem.risk_score >= Min And ThisItem.risk_score <= Max).Color
+                              FillPortions: =1
+                              FontWeight: =FontWeight.Bold
+                              OnSelect: =Select(galDashPending)
+                              Size: =16
+                              Text: ="Risk " & ThisItem.risk_score
+                        - lblDashRowDate:
+                            Control: Label
+                            Properties:
+                              Align: =Align.Right
+                              Color: =Theme.TextMuted
+                              FillPortions: =1
+                              OnSelect: =Select(galDashPending)
+                              Size: =14
+                              Text: =Text(ThisItem.submission_date, "yyyy-mm-dd")
