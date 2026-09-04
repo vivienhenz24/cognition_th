@@ -13,9 +13,9 @@ FNR==1 { prevblock=0 }
   else if (line ~ /^[ \t]*[A-Za-z0-9_]+:[ \t]*\|[-+]?[ \t]*$/) prevblock=1
   if (line ~ /^[ \t]*[A-Za-z0-9_]+: =.*[{#]/)     printf "%s:%d: BRACE_OR_HASH_SINGLE_LINE: use |- block\n", FILENAME, FNR
   else if (line ~ /^[ \t]*[A-Za-z0-9_]+: =.*:/)   printf "%s:%d: COLON_SINGLE_LINE: use |- block\n", FILENAME, FNR
-  if (line ~ /^[ \t]*[A-Za-z0-9_]+: [\x27"]/)      printf "%s:%d: QUOTED_FORMULA: remove YAML quotes, start with =\n", FILENAME, FNR
+  if (line ~ /^[ \t]*[A-Za-z0-9_]+: [\047"]/)      printf "%s:%d: QUOTED_FORMULA: remove YAML quotes, start with =\n", FILENAME, FNR
   if (line ~ /^[ \t]*#/)                           printf "%s:%d: YAML_COMMENT: remove # comment\n", FILENAME, FNR
-  if (line ~ /FontSize:|\.SelectedItems|\.Result\b|SelectedText/) printf "%s:%d: BAD_PROPERTY: see Rule 7\n", FILENAME, FNR
+  if (line ~ /FontSize:|\.SelectedItems|\.Result([^A-Za-z_]|$)|SelectedText/) printf "%s:%d: BAD_PROPERTY: see Rule 7\n", FILENAME, FNR
   if (line ~ /[^A-Za-z]Contains\(|\.Contains\(/)          printf "%s:%d: NO_CONTAINS: use the in operator (Step 2c)\n", FILENAME, FNR
   if (line ~ /Search\(/)                             printf "%s:%d: SEARCH_FN: use Filter(..., text in col) or IsMatch (Step 2c)\n", FILENAME, FNR
   if (line ~ /ClearCollect\([A-Za-z_]+\)|ClearCollect\([A-Za-z_]+, *\{\}\)/) printf "%s:%d: CLEARCOLLECT_ARGS: seed a typed row then Clear (Step 2c)\n", FILENAME, FNR

@@ -6,9 +6,9 @@ says what to build.
 
 ## Connection values
 
-- ENVIRONMENT_ID: `26e4f594-b375-ebb4-a01d-d93c5d0f3c01`
-- APP_ID: `6172e0eb-0763-4046-af22-efccb7f7a6cb`
-- WORKDIR: `<absolute path to this repo>/kyc-example/generated`
+- ENVIRONMENT_ID: `<ENVIRONMENT_ID>`
+- APP_ID: `<APP_ID>`
+- WORKDIR: `<WORKDIR>`
 
 ## Files to produce in WORKDIR
 
