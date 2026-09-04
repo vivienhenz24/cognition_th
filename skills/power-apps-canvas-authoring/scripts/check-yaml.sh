@@ -28,4 +28,4 @@ FNR==1 { prevblock=0 }
   if (line ~ /varShow[A-Za-z]*|UpdateContext\(/)         printf "%s:%d: VARIABLE_POLICY: only varSelected and varConfirmMode (C6)\n", FILENAME, FNR
   if (line ~ /Padding(Top|Bottom|Left|Right): =[0-9]|LayoutGap: =[0-9]/) printf "%s:%d: RAW_SPACING: use Space.* (C4)\n", FILENAME, FNR
   if (line ~ /Appearance: =[A-Za-z]+$|Appearance: =[A-Za-z]+\.[A-Za-z]+\.[A-Za-z]+$/) printf "%s:%d: ENUM_NAMESPACE: use the quoted-namespace form from Rule 6\n", FILENAME, FNR
-}' "${1:-/Users/vivienhenz/cognition_th/kyc-example/generated}"/*.pa.yaml
+}' "${1:-$(cd "$(dirname "$0")/../../.." && pwd)/kyc-example/generated}"/*.pa.yaml

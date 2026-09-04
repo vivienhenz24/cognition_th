@@ -117,4 +117,5 @@ Screens:
                               Color: =Theme.TextMuted
                               FillPortions: =2
                               Size: =14
-                              Text: =If(IsBlank(ThisItem.reviewed_date), "-", Text(ThisItem.reviewed_date, "yyyy-mm-dd hh:mm"))
+                              Text: |-
+                                =If(IsBlank(ThisItem.reviewed_date), "-", Text(ThisItem.reviewed_date, "yyyy-mm-dd hh:mm"))

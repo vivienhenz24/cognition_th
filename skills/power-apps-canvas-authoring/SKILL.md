@@ -198,7 +198,7 @@ Before calling `compile_canvas`, scan each file you wrote and fix these by hand:
 
 You may run exactly one shell command for this check, nothing else:
 ```
-/Users/vivienhenz/cognition_th/skills/power-apps-canvas-authoring/scripts/check-yaml.sh <WORKDIR>
+skills/power-apps-canvas-authoring/scripts/check-yaml.sh <WORKDIR>   (run from the repo root)
 ```
 It prints one line per problem with the file, line number, and which rule to apply.
 Every line it prints is a bug. Fix all of them, re-run it, and only call `compile_canvas`

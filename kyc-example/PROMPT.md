@@ -8,7 +8,7 @@ says what to build.
 
 - ENVIRONMENT_ID: `26e4f594-b375-ebb4-a01d-d93c5d0f3c01`
 - APP_ID: `6172e0eb-0763-4046-af22-efccb7f7a6cb`
-- WORKDIR: `/Users/vivienhenz/cognition_th/kyc-example/generated`
+- WORKDIR: `<absolute path to this repo>/kyc-example/generated`
 
 ## Files to produce in WORKDIR
 
