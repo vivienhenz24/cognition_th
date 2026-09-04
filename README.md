@@ -1,67 +1,67 @@
-hi this is my devin take home:
+# Devin + Power Apps: KYC Review Queue prototype
+
+This repo is my Cognition take-home. The question: can a fintech team use Devin to build the internal tools they currently make in Microsoft Power Apps?
+
+To test that, I had Devin build one of their real apps, a KYC review queue, directly inside Power Apps. Devin writes the app's source files, checks them, and pushes them into Power Apps Studio through Microsoft's own authoring tool.
 
 ## Demo
 
-Screen recording of the KYC Review Queue prototype built in Power Apps with Devin:
-
 https://github.com/user-attachments/assets/6fcde944-62c8-4954-8730-af42a3042691
 
-(Download: [Cognition_TH_Prototype_demo.mp4](./Cognition_TH_Prototype_demo.mp4))
+Download: [Cognition_TH_Prototype_demo.mp4](./Cognition_TH_Prototype_demo.mp4)
 
-The generated app source lives in [`kyc-example/generated`](./kyc-example/generated) and the build prompt is in [`kyc-example/PROMPT.md`](./kyc-example/PROMPT.md).
+## What the app does
 
+A compliance reviewer opens the app and sees:
 
-Assignment
-Overview
-A prospective Cognition client, a Series C fintech startup with ~60 engineers, currently pays $250K/year for an internal tool platform (e.g. Microsoft Power Apps). Currently, they use Microsoft Power Apps for 3 internal apps – a KYC review queue, a refunds dashboard, and a feature-flag admin panel – however they are planning to build at least 10 more soon. Their VP of Engineering is questioning whether the team can use Devin to build these internal tools, potentially saving the license cost and gaining full customization control.
+- **Dashboard.** Counts of pending, approved-today, and rejected-today requests. A list of pending requests with a colour-coded risk score. Search by name and filter by risk level.
+- **Review screen.** All details of one request, a notes box, and Approve / Reject buttons. High-risk approvals need a supervisor email. Rejections need notes. Every decision writes an audit log entry.
+- **History.** Every reviewed request with who reviewed it and when. Filter by status.
 
-You've been asked to evaluate this question and deliver a recommendation.
+Data is seeded in memory when the app starts, since this environment has no database.
 
-Your Task
+## What is in this repo
 
-Research: Understand what Microsoft Power Apps does, its core capabilities, and where its value lies for a team like this.
+| Path | What it is |
+|---|---|
+| `kyc-example/PROMPT.md` | The task given to Devin: the app spec plus connection IDs. |
+| `kyc-example/generated/` | The Power Apps source files Devin wrote (`.pa.yaml`, one per screen). |
+| `skills/power-apps-canvas-authoring/` | The playbook Devin follows: how to connect, write valid YAML, and fix compile errors. Includes a small checker script. |
+| `setup.sh` | Checks you have the tools installed. |
+| `connect.sh` | Installs Microsoft's Power Apps plugin into Devin and confirms it boots. |
+| `.devin/mcp_config.json` | Tells Devin how to start Microsoft's Canvas Authoring server. |
 
-Prototype: Spend ~2 hours building a working prototype that demonstrates how Devin Cloud can be used to replicate the core functionality of Power Apps. Focus on the capabilities that would matter most to a fintech engineering team building many new internal tools. Do not spend more than 2 hours on this.
+## How to run it
 
-Evaluate: Honestly assess how Devin compares to Power Apps for their use case. Consider build cost, maintenance burden, security implications, and opportunity cost of engineering time.
+You need: .NET 10 SDK, the Devin CLI (logged in), and a Microsoft work or school account with Power Apps.
 
-Recommend: Deliver a clear build-vs-buy recommendation. There is no right answer — we are evaluating the quality of your reasoning, not which side you land on.
+1. **Check prerequisites.**
+   ```bash
+   ./setup.sh
+   ```
+   It tells you what is missing and how to install it.
 
-Deliverables
+2. **Install the Power Apps plugin into Devin.**
+   ```bash
+   ./connect.sh
+   ```
 
-Working Prototype — A GitHub repository containing whatever you built with Devin. Include a README explaining what it does and how to run it.
+3. **Create an empty app in Power Apps.** In the browser, go to https://make.powerapps.com.
+   Create a blank canvas app (tablet) and save it. In Settings, turn on "Coauthoring". Keep the tab open.
 
-Keep in mind that spending far more time than recommended (~2 hours) on the prototype makes it a less plausible proof of concept for the client.
+4. **Copy the IDs.** The address bar looks like
+   `https://make.powerapps.com/e/<ENVIRONMENT_ID>/canvas/?action=edit&app-id=<APP_ID>`.
+   Paste both IDs into `kyc-example/PROMPT.md` under "Connection values".
 
-Loom Video (5 minutes max) — Present your findings to the client's VP of Engineering (your audience). Your video should cover:
+5. **Hand it to Devin.**
+   ```bash
+   devin --prompt-file kyc-example/PROMPT.md
+   ```
+   Devin signs in to Microsoft (a browser window opens), writes the four source files, compiles them until there are no errors, and syncs the app into your open Studio tab.
 
-What you see as the most important aspects of Microsoft Power Apps
+6. **Try it.** Press Play in Power Apps Studio.
 
-Explain how Devin will be able to help if they choose to build. Use what you were able to build to help explain this.
+## Notes
 
-Your honest assessment: what's replicable with Devin, what's not, and where the risk lies
-
-Your Build vs Buy recommendation and the reasoning behind it
-
-What you recommend next if the client wants to proceed (in either direction), and where, if anywhere, Devin fits into that path.
-
-Key Decisions one-pager (1 page max) — A written overview of the system you designed/built and why you chose that scope, including the key tradeoffs and architectural decisions you made. This is for us to understand your thought process not for the hypothetical customer. Do not submit AI slop.
-
-Guidelines
-
-Spend no more than 3-4 hours total on research, planning, building, and presenting.
-
-Use Devin as your primary building tool – your output should demonstrate to the client how their team could use Devin for this project.
-
-Honesty and judgment matter more than completeness. A well-reasoned "don't build this" is a stronger answer than a complex prototype with no analysis.
-
- 
-
-
-
-
-The goal would be to return this completed within 4 days - please let me know if you will require additional time!
-
-
-
-Looking forward to seeing your work!
+- Devin never touches the Power Apps UI. It only writes source files and calls Microsoft's authoring server, so every change is reviewable text.
+- The `skills` folder is the important part. It captures the rules that made the build succeed on the first compile pass, so the next app is cheaper than the first.
