@@ -2,7 +2,7 @@
 
 ## What the tool does
 
-The KYC Review Queue gives signed-in compliance reviewers a focused dashboard for pending customer identity checks. Reviewers can filter by risk, search by customer name, and approve or reject requests through risk-aware confirmation flows. Every seeded request and reviewer decision is stored in MongoDB with exactly one corresponding audit record.
+The KYC Review Queue gives signed-in compliance reviewers a focused dashboard for pending customer identity checks. Reviewers can filter by risk, search by customer name, and approve or reject requests through risk-aware confirmation flows. Every seeded request and reviewer decision is stored in MongoDB with exactly one corresponding audit record; [watch the browser-tested workflow](kyc-review-queue-demo.mp4).
 
 ## How to run it
 
