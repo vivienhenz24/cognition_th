@@ -5,47 +5,77 @@ description: Build and modify Power Apps canvas apps as .pa.yaml source through 
 
 # Power Apps canvas authoring via MCP
 
-This skill is the complete operating procedure. The task prompt gives you only the app
-spec plus three values: `ENVIRONMENT_ID`, `APP_ID`, and `WORKDIR` (the folder for the
-generated `.pa.yaml` files). Everything else is here. Follow the sections in order.
+This skill is the complete operating procedure. Prefer a full Power Apps Studio edit URL
+plus `WORKDIR` (the folder for the generated `.pa.yaml` files). For compatibility with
+the local starter-kit flow, `ENVIRONMENT_ID` and `APP_ID` may be supplied separately.
+Everything else is here. Follow the sections in order.
 
 Ground rules:
-- Everything is installed and configured. Do not search for config files, plugin
-  directories, docs, or `devin` CLI commands. Do not run `devin mcp ...`,
-  `devin plugins ...`, `find`, or `dnx` in a shell.
+- The plugin and MCP server are installed before the authoring task begins. Do not
+  reconfigure them from inside the task or run `devin mcp`, `devin plugins`, or `dnx`.
 - Use only the MCP tools named below, Read/Write/Edit on `.pa.yaml` files, and the one
   checker script in section 3.
-- Do not ask questions at any point. If blocked, print the error and stop.
+- Ask only for a missing Studio URL or connection value. Never ask for a password,
+  access token, or connection string.
 
 ## 1. Preflight and connect
 
-**Preflight (one call, no retries).** Call `mcp_list_tools(server_name="canvas-authoring")`.
-- If it returns tools (`connect`, `sync_canvas`, `compile_canvas`, `list_controls`,
-  `describe_control`, `list_data_sources`, `list_apis`, `describe_api`,
-  `get_data_source_schema`): continue.
-- If it errors with "not found": stop immediately and print exactly:
-  `MCP server not loaded in this session. Restart Devin from the repo root and re-run this prompt.`
+Before connecting, confirm that the Power Apps Studio edit tab is open, signed in,
+coauthoring is enabled under Settings → Updates, and the tab will remain open for the
+whole authoring session.
 
-**Connect (arguments come from the task prompt):**
+When a Studio URL is supplied, extract:
+
+- `environment_id`: the path segment after `/e/`.
+- `app_id`: URL-decode the `app-id` query parameter and take its final path segment.
+- `environment_category`: map the URL hostname using this table:
+
+| Hostname | Category |
+|---|---|
+| `make.powerapps.com` | `prod` |
+| `make.preview.powerapps.com` | `prod` |
+| `make.preprod.powerapps.com` | `preprod` |
+| `make.gov.powerapps.us` | `gov` |
+| `make.high.powerapps.us` | `high` |
+| `make.apps.appsplatform.us` | `dod` |
+| `make.powerapps.cn` | `china` |
+| Any other hostname | `test` |
+
+If separate IDs are supplied, use them and default `environment_category` to `prod`
+unless the task identifies another Power Apps cloud.
+
+Call:
+
 ```
 mcp__canvas-authoring__connect(
-  environment_id       = "<ENVIRONMENT_ID>",
-  app_id               = "<APP_ID>",
-  environment_category = "prod"
+  environment_id       = "<parsed or supplied environment ID>",
+  app_id               = "<parsed or supplied app ID>",
+  environment_category = "<mapped category>"
 )
 ```
-A browser sign-in window may open. Wait for the tool to return. On 401/403, call it once
-more with `force_account_select = true`. If it still fails, stop and print the error.
+
+On Devin cloud, Microsoft sign-in may open in the session's Desktop browser. Let the user
+complete interactive sign-in or MFA there; credentials must never be pasted into chat.
+Omit optional authentication parameters on the first call. On 401/403, retry once with
+`force_account_select = true`. Use `login_hint` or `tenant_id` only when the user already
+provided them. Use `auth_flow = "devicecode"` only on a genuinely headless host whose MCP
+client supports elicitation.
+
+If the `connect` tool is unavailable, run `dotnet --list-sdks`. A 10.x or later SDK must
+be present. Otherwise report that the plugin/environment setup is incomplete and that a
+new Devin session is required after it is fixed.
 
 ## 2. Sync and discover
 
-1. `sync_canvas(directory="<WORKDIR>")`. This writes `App.pa.yaml`, `Screen1.pa.yaml`,
-   `_EditorState.pa.yaml`. Never edit `_EditorState.pa.yaml`.
+1. `sync_canvas(directoryPath="<WORKDIR>")`. This downloads the current Studio state and
+   overwrites matching local files, including `App.pa.yaml`, `Screen1.pa.yaml`, and
+   `_EditorState.pa.yaml`. Run it before local edits, never after them. Never edit
+   `_EditorState.pa.yaml`.
 2. `list_controls()`. Note the exact control names available.
-3. `describe_control(name=...)` for every control type you will use (at minimum Screen,
-   GroupContainer, Label, Button, TextInput, DropDown, Gallery). Copy the `Control:`
-   value, `Variant`, property names, and enum names verbatim. Never guess a property or
-   enum name.
+3. `describe_control(controlName=...)` for every control type you will use (at minimum
+   Screen, GroupContainer, Label, Button, TextInput, DropDown, Gallery). Copy the
+   `Control:` value, `Variant`, property names, and enum names verbatim. Never guess a
+   property or enum name.
 
 ## 3. .pa.yaml syntax rules (non-negotiable)
 
@@ -90,7 +120,7 @@ Items: |-
 
 ```yaml
 OnSelect: |-
-  =If(Contains(txtEmail.Text, "@"),
+  =If("@" in txtEmail.Value,
     Patch(KYC_Requests, LookUp(KYC_Requests, id = varSelected.id), {status: "Approved"});
     Collect(Audit_Log, {action_type: "Approve", user: User().Email, timestamp: Now(), record_id: varSelected.id, details: "ok"});
     Notify("Approved", NotificationType.Success);
@@ -214,7 +244,7 @@ does not exist or has a different signature. Use only the right-hand column.
 |---|---|---|
 | `Contains(text, "x")` | No such function | `"x" in text` (case-insensitive substring) |
 | `customer_name.Contains(...)` | No method syntax | `txtSearch.Value in customer_name` |
-| `Search(txt, "@", "*")` on a text value | `Search` works on tables only | `"@" in txt` or `IsMatch(txt, Email)` |
+| `Search(txt, "@", "*")` on a text value | `Search` works on tables only | `"@" in txt` or `IsMatch(txt, Match.Email)` |
 | `Search(table, text)` with 2 args | Needs 3+: `Search(table, text, "col")` | prefer `Filter(table, text in col)` |
 | `customer_name = txtSearch.Value` as a "search" | Exact match, not search; violates spec | `txtSearch.Value in customer_name` |
 | `ClearCollect(Audit_Log)` | Needs 2+ args | seed one typed row, then `Clear` (see OnStart below) |
@@ -422,7 +452,7 @@ Approve and Reject share one panel and one write path. Keep a single text variab
                   OnSelect: |-
                     =If(varConfirmMode = "Reject" And IsBlank(txtDetailNotes.Value),
                       Notify("Reviewer notes are required to reject", NotificationType.Error),
-                      varConfirmMode = "Approve" And varSelected.risk_score > 7 And Not(IsMatch(txtDetailSupervisor.Value, Email)),
+                      varConfirmMode = "Approve" And varSelected.risk_score > 7 And Not(IsMatch(txtDetailSupervisor.Value, Match.Email)),
                       Notify("Enter a valid supervisor email", NotificationType.Error),
                       Patch(KYC_Requests, LookUp(KYC_Requests, id = varSelected.id),
                         {status: If(varConfirmMode = "Reject", "Rejected", "Approved"),
@@ -490,7 +520,9 @@ Approve and Reject share one panel and one write path. Keep a single text variab
 ## 7. Validate loop
 
 1. Run `check-yaml.sh` (section 3, Rule 9). Fix everything it flags until it prints nothing.
-2. `compile_canvas(directory="<WORKDIR>")`
+2. `compile_canvas(directoryPath="<WORKDIR>")`. A successful compile validates and
+   applies the local YAML through the Power Apps authoring service to the open Studio
+   session.
 3. For **each** error, read the exact line number it names, print that line, classify it
    with the table below, apply the matching fix, and move to the next error. Fix in place
    with targeted edits. Do not regenerate whole files.
@@ -515,8 +547,9 @@ Approve and Reject share one panel and one write path. Keep a single text variab
    quotes, then re-check Rules 6 and 7 for that control.
 5. Repeat until zero errors. Cap at 8 compile rounds; if still failing, list the remaining
    errors with their line text and stop.
-6. `sync_canvas` again so the app appears in the open Studio tab.
-7. `get_appchecker_errors()` if the tool exists in the list from section 1; otherwise skip.
+6. Do not call `sync_canvas` after local edits; it downloads server state and can
+   overwrite the files you just changed.
+7. `get_appchecker_errors()` if the tool exists; otherwise skip.
 
 
 ## 8. Report

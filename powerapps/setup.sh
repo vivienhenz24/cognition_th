@@ -3,6 +3,8 @@
 #
 #   ./setup.sh          check everything, offer to fix what is missing
 #   ./setup.sh --yes    same, but apply every fix without asking
+#   ./setup.sh --runtime-only --yes
+#                       install and verify only the cloud MCP runtime
 #
 # Works on macOS and Linux (Windows: run inside WSL).
 # Ref: https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/create-canvas-external-tools
@@ -11,7 +13,15 @@ GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[1;33m'; NC='\033[0m'
 ok()   { printf "${GREEN}✓${NC} %s\n" "$1"; }
 warn() { printf "${YELLOW}⚠${NC} %s\n" "$1"; }
 fail() { printf "${RED}✗${NC} %s\n" "$1"; FAILED=1; }
-AUTO=0; [ "$1" = "--yes" ] || [ "$1" = "-y" ] && AUTO=1
+AUTO=0
+RUNTIME_ONLY=0
+for arg in "$@"; do
+  case "$arg" in
+    --yes|-y) AUTO=1 ;;
+    --runtime-only) RUNTIME_ONLY=1 ;;
+    *) fail "Unknown option: $arg"; exit 1 ;;
+  esac
+done
 ask() {  # ask "question" -> returns 0 for yes
   [ "$AUTO" = 1 ] && return 0
   [ -t 0 ] || return 1
@@ -55,6 +65,22 @@ else
   fail ".NET 10 SDK still missing."
 fi
 if command -v dnx >/dev/null 2>&1; then ok "dnx available"; else fail "dnx not found (ships with the .NET 10 SDK; check $DOTNET_ROOT/dnx exists)"; fi
+
+if [ "$RUNTIME_ONLY" = 1 ]; then
+  if [ -z "$FAILED" ]; then
+    echo "⬇️  Fetching the Canvas Authoring MCP server from NuGet..."
+    if dnx Microsoft.PowerApps.CanvasAuthoring.McpServer --yes --prerelease </dev/null >/dev/null 2>&1; then
+      ok "Canvas Authoring MCP server available"
+    else
+      fail "Canvas Authoring MCP server could not be fetched or started."
+    fi
+  fi
+  echo
+  if [ -n "$FAILED" ]; then
+    echo "Fix the ✗ items above, then re-run ./setup.sh --runtime-only --yes"; exit 1
+  fi
+  echo "Cloud MCP runtime ready."; exit 0
+fi
 
 # 2. dotnet on the login-shell PATH, so Devin's plugin hook can find it
 if [ "$DOTNET_ON_PATH" = 1 ]; then

@@ -1,0 +1,40 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}KYC Review Queue{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="{% url 'kyc:show_kyc_review_dashboard' %}">
+        <span class="brand-mark">K</span>
+        <span>KYC Review Queue</span>
+      </a>
+      {% if user.is_authenticated %}
+        <nav aria-label="Primary">
+          <a href="{% url 'kyc:show_kyc_review_dashboard' %}">Dashboard</a>
+          <a href="{% url 'kyc:show_reviewed_kyc_request_history' %}">History</a>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="link-button" type="submit">Sign out {{ user.username }}</button>
+          </form>
+        </nav>
+      {% endif %}
+    </header>
+
+    <main class="page-shell">
+      {% if messages %}
+        <div class="messages" aria-live="polite">
+          {% for message in messages %}
+            <div class="message message-{{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

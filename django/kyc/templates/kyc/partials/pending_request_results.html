@@ -1,0 +1,38 @@
+{% if pending_request_rows %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Customer</th>
+          <th>Risk score</th>
+          <th>Submitted</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pending_request_row in pending_request_rows %}
+          <tr>
+            <td>{{ pending_request_row.kyc_request.kyc_request_id }}</td>
+            <td>
+              <a
+                class="row-link"
+                href="{% url 'kyc:show_kyc_request_review_detail' pending_request_row.kyc_request.kyc_request_id %}"
+              >{{ pending_request_row.kyc_request.customer_name }}</a>
+            </td>
+            <td>
+              <span class="badge badge-{{ pending_request_row.risk_band|lower }}">
+                {{ pending_request_row.risk_band }} · {{ pending_request_row.kyc_request.risk_score }}/10
+              </span>
+            </td>
+            <td>{{ pending_request_row.kyc_request.submission_date|date:"M j, Y" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="empty-state">
+    <h3>No pending requests match these filters</h3>
+    <p>Try another risk band or clear the customer name search.</p>
+  </div>
+{% endif %}

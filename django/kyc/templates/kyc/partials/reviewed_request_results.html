@@ -1,0 +1,31 @@
+{% if reviewed_requests %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Customer</th>
+          <th>Status</th>
+          <th>Reviewer</th>
+          <th>Reviewed</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for reviewed_request in reviewed_requests %}
+          <tr>
+            <td>{{ reviewed_request.kyc_request_id }}</td>
+            <td>{{ reviewed_request.customer_name }}</td>
+            <td><span class="badge badge-{{ reviewed_request.status|lower }}">{{ reviewed_request.status }}</span></td>
+            <td>{{ reviewed_request.reviewed_by }}</td>
+            <td>{{ reviewed_request.reviewed_date|date:"M j, Y, g:i a" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="empty-state">
+    <h3>No reviewed requests match this filter</h3>
+    <p>Choose another status or return to the dashboard.</p>
+  </div>
+{% endif %}

@@ -1,0 +1,36 @@
+services:
+  mongo:
+    image: mongo:7.0
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet --eval \"try { quit(rs.status().ok ? 0 : 1) } catch (error) { quit(rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]}).ok ? 0 : 1) }\"",
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - mongo_data:/data/db
+
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py seed &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DJANGO_DEBUG: "${DJANGO_DEBUG:-1}"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-development-only-secret-key}"
+      MONGODB_URI: "${MONGODB_URI:-mongodb://mongo:27017/kyc_review_queue?replicaSet=rs0}"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+
+volumes:
+  mongo_data:

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in · KYC Review Queue{% endblock %}
+
+{% block content %}
+  <section class="login-card">
+    <p class="eyebrow">Restricted internal tool</p>
+    <h1>Sign in to review KYC requests</h1>
+    <p class="muted">Use a seeded reviewer or supervisor account.</p>
+    {% if form.errors %}
+      <div class="message message-error">The username or password was not recognized.</div>
+    {% endif %}
+    <form method="post" class="stacked-form">
+      {% csrf_token %}
+      <label for="{{ form.username.id_for_label }}">Username</label>
+      {{ form.username }}
+      <label for="{{ form.password.id_for_label }}">Password</label>
+      {{ form.password }}
+      <button class="button button-primary" type="submit">Sign in</button>
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    </form>
+  </section>
+{% endblock %}

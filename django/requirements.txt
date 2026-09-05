@@ -1,0 +1,4 @@
+Django==5.2.4
+django-mongodb-backend==5.2.4
+django-htmx==1.23.2
+pymongo==4.13.2
