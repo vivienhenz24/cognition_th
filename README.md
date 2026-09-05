@@ -1,210 +1,22 @@
-# Two ways to build internal tools with Devin
+# KYC Review Queue, two ways
 
-This repository keeps two implementations of the same KYC review-queue idea so they can be compared directly. The `powerapps/` arm tests Devin as an author inside Microsoft Power Apps, while the `django/` arm tests Devin building and owning the internal tool as a separate application.
+The same internal tool (a queue where compliance reviewers approve or reject customer identity checks) built two ways, so they can be compared side by side.
 
-## Approach 1: build with Devin on Power Apps
+## Approach 1: Devin on Power Apps
 
-[`powerapps/`](powerapps/) uses Microsoft's Canvas Authoring MCP server so Devin can sync, edit, validate, and compile a live Canvas app. This approach keeps Power Apps as the runtime and low-code platform while using Devin to accelerate authoring. See the [Power Apps setup guide](powerapps/README.md) for the Studio and authentication workflow.
+Devin edits a live Power Apps canvas app through Microsoft's Canvas Authoring MCP server. Power Apps stays the runtime. Setup and usage are in [`powerapps/README.md`](powerapps/README.md).
 
-## Approach 2: build the internal tool separately
+https://github.com/user-attachments/assets/6fcde944-62c8-4954-8730-af42a3042691
 
-[`django/`](django/) is an independent Django 5 application with server-rendered templates, HTMX, MongoDB 7, authentication, business rules, and an audit trail. It does not depend on Power Apps and runs locally through Docker Compose. [Watch the browser-tested Django workflow](django/kyc-review-queue-demo.mp4).
+## Approach 2: a standalone Django app
 
-## Run the standalone Django tool
+Devin builds and owns the whole tool as a Django 5 app with HTMX, MongoDB, login, business rules, and an audit trail. Details are in [`django/README.md`](django/README.md). To run it:
 
 ```bash
 cd django
 just dev
 ```
 
-Open `http://localhost:8000` and sign in with `reviewer` / `reviewer` or `supervisor` / `supervisor`. Run `just test` for the test suite and `just down` to stop the containers.
+Open http://localhost:8000 and sign in with `reviewer` / `reviewer` or `supervisor` / `supervisor`.
 
-## What the comparison shows
-
-| | Devin on Power Apps | Separate Django tool |
-|---|---|---|
-| Platform | Power Apps Canvas and its coauthoring services | Python, Django, HTMX, and MongoDB |
-| Devin's role | Edits and compiles the live Canvas app | Builds and maintains the complete application |
-| Runtime | Microsoft Power Apps | Team-operated Docker services |
-| Main tradeoff | Faster low-code platform integration with platform constraints | More implementation and operational ownership with full code-level control |
-
-
----
-
-# KYC Review Queue
-
-## What the tool does
-
-The KYC Review Queue gives signed-in compliance reviewers a focused dashboard for pending customer identity checks. Reviewers can filter by risk, search by customer name, and approve or reject requests through risk-aware confirmation flows. Every seeded request and reviewer decision is stored in MongoDB with exactly one corresponding audit record; [watch the browser-tested workflow](kyc-review-queue-demo.mp4).
-
-## How to run it
-
-Install Docker Compose and `just`, then copy `.env.example` to `.env` only if you want to override the development defaults. Run `just dev` from this directory and open http://localhost:8000 after the containers finish migrating and seeding. Sign in with `reviewer` / `reviewer` or `supervisor` / `supervisor`, run `just test` for the suite, and use `just down` when finished.
-
-## How to add the next tool
-
-Create a new Django app beside `kyc` and keep reusable models, templates, and audit behavior in `core`. Put every domain write and business rule in the new app's services module, and make each write call `core.audit.log` within the same MongoDB transaction. Add the app's URLs, templates, plain admin registration, idempotent seed command, and service tests without importing that app back into `core`.
-
-
----
-
-# Devin Cloud + Power Apps starter kit
-
-Build Power Apps canvas apps with Devin cloud or the Devin CLI. Devin downloads the app's
-source, edits and validates `.pa.yaml`, and applies the result through Power Apps Studio.
-
-Demo of a finished app (a KYC review queue):
-
-https://github.com/user-attachments/assets/6fcde944-62c8-4954-8730-af42a3042691
-
-## Devin cloud setup
-
-### 1. Install this repository as a managed plugin
-
-An organization admin opens
-[Settings → Resources → Plugins](https://app.devin.ai/settings/marketplace) and adds this
-repository to the managed manifest:
-
-```json
-{
-  "requiredPlugins": [
-    "vivienhenz24/cognition_th"
-  ]
-}
-```
-
-The plugin contributes the `power-apps-canvas-authoring` skill and starts Microsoft's
-Canvas Authoring MCP server through the committed `.mcp.json`.
-
-### 2. Add .NET 10 to the repository environment
-
-The MCP server requires the .NET 10 SDK and its `dnx` command. Configure the Devin
-repository environment to run the runtime-only setup and preserve the SDK path:
-
-```bash
-export DOTNET_ROOT="$HOME/.dotnet"
-export PATH="$DOTNET_ROOT:$DOTNET_ROOT/tools:$PATH"
-./setup.sh --runtime-only --yes
-```
-
-The environment must allow package downloads from NuGet and Microsoft authentication and
-Power Apps endpoints. Start a new session after the environment snapshot and managed
-plugin are active.
-
-### 3. Open the app in the cloud session
-
-1. Open the session's **Desktop** tab and sign in to https://make.powerapps.com with a
-   Microsoft work or school account.
-2. Create or open a Canvas App in edit mode.
-3. Open Settings → Updates and enable **Coauthoring**.
-4. Keep the Studio tab open for the entire authoring session.
-5. Paste the complete Studio URL into the Devin chat and describe the requested change.
-
-Microsoft sign-in or MFA may appear in the Desktop browser. Complete it there; never paste
-passwords, tokens, or connection strings into chat. Devin parses the environment and app
-IDs from the Studio URL, connects the MCP server, downloads the current app, and applies
-the compiled changes to the live Studio session.
-
-## Local Devin CLI setup
-
-### What you need
-
-- macOS or Linux. On Windows, run everything inside WSL.
-- The Devin CLI, installed from https://devin.ai/
-- A Microsoft work or school account with access to Power Apps. A free developer plan works: https://aka.ms/PowerAppsDevPlan
-- .NET 10 SDK. If you do not have it, `setup.sh` offers to install it for you, no admin rights needed.
-
-### 1. Check your machine and fix what is missing
-
-```bash
-./setup.sh
-```
-
-It checks each requirement and offers to fix what it can: install the .NET 10 SDK, add it to your shell PATH, and log you in to Devin. Run `./setup.sh --yes` to apply all fixes without being asked.
-
-If it adds .NET to your PATH, open a new terminal before the next step.
-
-### 2. Install the Power Apps plugin into Devin
-
-```bash
-./connect.sh
-```
-
-Installs Microsoft's `canvas-apps` plugin, registers the Canvas Authoring server for this project with the correct paths for your machine, downloads the server from NuGet, and starts it once to confirm it works. The first run can take a minute.
-
-If the smoke test times out on a slow network, run `SMOKE_WAIT=30 ./connect.sh`.
-
-### 3. Create an empty app in Power Apps
-
-1. Go to https://make.powerapps.com
-2. Create a blank canvas app (tablet layout) and save it, for example as "KYC Review Queue".
-3. Open Settings, then Updates, and turn on **Coauthoring**.
-4. Keep this browser tab open. Devin applies compiled changes through this Studio session.
-
-### 4. Give the app IDs to the prompt
-
-The address bar of the open app looks like this:
-
-```
-https://make.powerapps.com/e/<ENVIRONMENT_ID>/canvas/?action=edit&app-id=<APP_ID>
-```
-
-Run connect.sh again with both values. It writes them into `kyc-example/PROMPT.md`:
-
-```bash
-./connect.sh <ENVIRONMENT_ID> <APP_ID>
-```
-
-### 5. Run Devin
-
-Open a new terminal in this folder and run:
-
-```bash
-devin --prompt-file kyc-example/PROMPT.md
-```
-
-Devin will:
-
-1. Sign in to Microsoft. A browser window opens once.
-2. Sync the current app state to `kyc-example/generated`.
-3. Write one `.pa.yaml` file per screen plus `App.pa.yaml`.
-4. Compile, fix errors, and repeat until clean.
-5. Apply the compiled app to your open Studio session.
-
-### 6. Test the app
-
-Press Play in Power Apps Studio.
-
-## Building a different app
-
-Copy `kyc-example/PROMPT.md`, keep the top section (connection values and the line that points to the skill), and replace the spec below it with your own. Run step 5 again with the new file.
-
-## What is in this repo
-
-| Path | Purpose |
-|---|---|
-| `.devin-plugin/plugin.json` | Makes this repository installable as a managed Devin plugin. |
-| `.mcp.json` | Starts Microsoft's Canvas Authoring MCP server through `dnx`. |
-| `setup.sh` | Checks requirements and offers to install what is missing. |
-| `connect.sh` | Installs the plugin, registers the server, smoke-tests it, and fills in the prompt file. |
-| `.devin/mcp_config.json` | Generated by `connect.sh`. Tells Devin how to start Microsoft's Canvas Authoring server, with paths for your machine. Not committed. |
-| `skills/power-apps-canvas-authoring/` | The rules Devin follows: connecting, writing valid YAML, fixing compile errors. `scripts/check-yaml.sh` catches common mistakes before compiling. |
-| `kyc-example/PROMPT.md` | Example prompt. App spec plus connection values. |
-| `kyc-example/generated/` | The files Devin produced for the example app. |
-
-## Troubleshooting
-
-- **Cloud session has no canvas-authoring tools.** Confirm the managed plugin is active,
-  the environment snapshot contains .NET 10 and `dnx`, and then start a new session.
-- **Cloud sign-in does not open automatically.** Open the Desktop tab and retry the
-  connection. If the wrong cached account is selected, ask Devin to force account
-  selection.
-- **Cloud asks you to sign in again after an MCP restart.** If the server reports that no
-  encrypted Secret Service keyring is available, it deliberately avoids a plaintext
-  token cache. Complete sign-in again in Desktop.
-- **.NET install fails on Linux.** .NET needs the ICU library. Install it first, for example `sudo apt install libicu-dev`, then re-run `./setup.sh`.
-- **Server does not start.** Run `dotnet --list-sdks`. You need a 10.x entry. Check `DOTNET_ROOT` points to where you installed it, then re-run `./connect.sh` so the config picks up the right path.
-- **Devin says the canvas-authoring tools are missing.** Run `./connect.sh` again, and start Devin from the repo root so it picks up `.devin/mcp_config.json`.
-- **Sign-in fails with 401 or 403.** Devin retries once with the account picker. Pick the account that owns the Power Apps environment.
-- **App does not appear in Studio, or compile reports odd errors like "PowerAppsTheme isn't recognized".** The Studio tab was closed. Compile and download sync only work with a live coauthoring session. Reopen the app in Studio, make sure Coauthoring is on, and retry.
-- **Compile errors.** Devin fixes them itself. If it stops with errors left, read `skills/power-apps-canvas-authoring/SKILL.md` section 7. Every known error is listed with its fix.
+https://github.com/user-attachments/assets/fac891fa-c6c9-4a31-9ba0-58ef2fe1bca7
