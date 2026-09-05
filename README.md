@@ -89,7 +89,7 @@ If the smoke test times out on a slow network, run `SMOKE_WAIT=30 ./connect.sh`.
 1. Go to https://make.powerapps.com
 2. Create a blank canvas app (tablet layout) and save it, for example as "KYC Review Queue".
 3. Open Settings, then Updates, and turn on **Coauthoring**.
-4. Keep this browser tab open. Devin syncs into it.
+4. Keep this browser tab open. Devin applies compiled changes through this Studio session.
 
 ### 4. Give the app IDs to the prompt
 
@@ -149,6 +149,9 @@ Copy `kyc-example/PROMPT.md`, keep the top section (connection values and the li
 - **Cloud sign-in does not open automatically.** Open the Desktop tab and retry the
   connection. If the wrong cached account is selected, ask Devin to force account
   selection.
+- **Cloud asks you to sign in again after an MCP restart.** If the server reports that no
+  encrypted Secret Service keyring is available, it deliberately avoids a plaintext
+  token cache. Complete sign-in again in Desktop.
 - **.NET install fails on Linux.** .NET needs the ICU library. Install it first, for example `sudo apt install libicu-dev`, then re-run `./setup.sh`.
 - **Server does not start.** Run `dotnet --list-sdks`. You need a 10.x entry. Check `DOTNET_ROOT` points to where you installed it, then re-run `./connect.sh` so the config picks up the right path.
 - **Devin says the canvas-authoring tools are missing.** Run `./connect.sh` again, and start Devin from the repo root so it picks up `.devin/mcp_config.json`.
