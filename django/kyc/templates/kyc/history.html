@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}History · KYC Review Queue{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Audit-ready decisions</p>
+      <h1>Review history</h1>
+      <p class="muted">Browse completed KYC decisions, newest first.</p>
+    </div>
+    <a class="button button-secondary" href="{% url 'kyc:show_kyc_review_dashboard' %}">Back to dashboard</a>
+  </div>
+
+  <section class="panel">
+    <form
+      class="filter-form"
+      method="get"
+      hx-get="{% url 'kyc:show_reviewed_kyc_request_history' %}"
+      hx-target="#reviewed-request-results"
+      hx-indicator="#reviewed-request-loading"
+      hx-push-url="true"
+    >
+      <div>
+        <label for="status-filter">Status</label>
+        <select id="status-filter" name="status" hx-trigger="change">
+          {% for status_filter_option in status_filter_options %}
+            <option value="{{ status_filter_option }}" {% if selected_status_filter == status_filter_option %}selected{% endif %}>{{ status_filter_option }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="button button-primary" type="submit">Apply filter</button>
+      <span id="reviewed-request-loading" class="htmx-indicator">Updating history…</span>
+    </form>
+    <div id="reviewed-request-results">
+      {% include "kyc/partials/reviewed_request_results.html" %}
+    </div>
+  </section>
+{% endblock %}

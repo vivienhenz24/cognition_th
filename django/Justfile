@@ -1,0 +1,19 @@
+set dotenv-load := true
+
+dev:
+    docker compose up --build
+
+seed:
+    docker compose up -d mongo
+    docker compose run --rm web python manage.py seed
+
+test:
+    docker compose up -d mongo
+    docker compose run --rm web python manage.py test
+
+shell:
+    docker compose up -d mongo
+    docker compose run --rm web python manage.py shell
+
+down:
+    docker compose down
