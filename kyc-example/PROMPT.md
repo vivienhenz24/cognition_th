@@ -6,9 +6,13 @@ says what to build.
 
 ## Connection values
 
+- STUDIO_URL: `<STUDIO_URL>`
 - ENVIRONMENT_ID: `<ENVIRONMENT_ID>`
 - APP_ID: `<APP_ID>`
 - WORKDIR: `<WORKDIR>`
+
+Prefer `STUDIO_URL` in Devin cloud. `ENVIRONMENT_ID` and `APP_ID` remain available for
+the local CLI flow; they may be omitted when the Studio URL is present.
 
 ## Files to produce in WORKDIR
 
