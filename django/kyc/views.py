@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.views.decorators.vary import vary_on_headers
 
 from kyc.forms import KycRequestDecisionForm
 from kyc.models import KycRequest
@@ -34,6 +35,7 @@ def request_is_partial_htmx_update(request):
     return request.htmx and not request.htmx.history_restore_request
 
 
+@vary_on_headers("HX-Request", "HX-History-Restore-Request")
 def show_kyc_review_dashboard(request):
     selected_risk_band = request.GET.get("risk_band", "All")
     customer_name_search = request.GET.get("name_search", "")
@@ -201,6 +203,7 @@ def build_kyc_request_detail_context(
     }
 
 
+@vary_on_headers("HX-Request", "HX-History-Restore-Request")
 def show_reviewed_kyc_request_history(request):
     selected_status_filter = request.GET.get("status", "All")
     reviewed_requests = list_reviewed_kyc_requests_matching_status_filter(

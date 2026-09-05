@@ -409,6 +409,25 @@ class KycRequestViewsTests(TestCase):
         self.assertContains(history_response, "<html")
         self.assertContains(history_response, "Completed reviews")
 
+    def test_filter_responses_vary_by_htmx_headers_to_prevent_fragment_caching(
+        self,
+    ):
+        self.client.force_login(self.reviewer)
+
+        dashboard_response = self.client.get(
+            reverse("kyc:show_kyc_review_dashboard"),
+            HTTP_HX_REQUEST="true",
+        )
+        history_response = self.client.get(
+            reverse("kyc:show_reviewed_kyc_request_history"),
+            HTTP_HX_REQUEST="true",
+        )
+
+        for response in [dashboard_response, history_response]:
+            vary_headers = response.headers["Vary"]
+            self.assertIn("HX-Request", vary_headers)
+            self.assertIn("HX-History-Restore-Request", vary_headers)
+
     def test_shared_component_slots_render_on_the_login_and_dashboard_pages(self):
         login_response = self.client.get(reverse("login"))
         self.client.force_login(self.reviewer)
