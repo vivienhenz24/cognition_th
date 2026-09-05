@@ -67,13 +67,15 @@ new Devin session is required after it is fixed.
 
 ## 2. Sync and discover
 
-1. `sync_canvas(directory="<WORKDIR>")`. This writes `App.pa.yaml`, `Screen1.pa.yaml`,
-   `_EditorState.pa.yaml`. Never edit `_EditorState.pa.yaml`.
+1. `sync_canvas(directoryPath="<WORKDIR>")`. This downloads the current Studio state and
+   overwrites matching local files, including `App.pa.yaml`, `Screen1.pa.yaml`, and
+   `_EditorState.pa.yaml`. Run it before local edits, never after them. Never edit
+   `_EditorState.pa.yaml`.
 2. `list_controls()`. Note the exact control names available.
-3. `describe_control(name=...)` for every control type you will use (at minimum Screen,
-   GroupContainer, Label, Button, TextInput, DropDown, Gallery). Copy the `Control:`
-   value, `Variant`, property names, and enum names verbatim. Never guess a property or
-   enum name.
+3. `describe_control(controlName=...)` for every control type you will use (at minimum
+   Screen, GroupContainer, Label, Button, TextInput, DropDown, Gallery). Copy the
+   `Control:` value, `Variant`, property names, and enum names verbatim. Never guess a
+   property or enum name.
 
 ## 3. .pa.yaml syntax rules (non-negotiable)
 
@@ -518,7 +520,9 @@ Approve and Reject share one panel and one write path. Keep a single text variab
 ## 7. Validate loop
 
 1. Run `check-yaml.sh` (section 3, Rule 9). Fix everything it flags until it prints nothing.
-2. `compile_canvas(directory="<WORKDIR>")`
+2. `compile_canvas(directoryPath="<WORKDIR>")`. A successful compile validates and
+   applies the local YAML through the Power Apps authoring service to the open Studio
+   session.
 3. For **each** error, read the exact line number it names, print that line, classify it
    with the table below, apply the matching fix, and move to the next error. Fix in place
    with targeted edits. Do not regenerate whole files.
@@ -543,8 +547,9 @@ Approve and Reject share one panel and one write path. Keep a single text variab
    quotes, then re-check Rules 6 and 7 for that control.
 5. Repeat until zero errors. Cap at 8 compile rounds; if still failing, list the remaining
    errors with their line text and stop.
-6. `sync_canvas` again so the app appears in the open Studio tab.
-7. `get_appchecker_errors()` if the tool exists in the list from section 1; otherwise skip.
+6. Do not call `sync_canvas` after local edits; it downloads server state and can
+   overwrite the files you just changed.
+7. `get_appchecker_errors()` if the tool exists; otherwise skip.
 
 
 ## 8. Report

@@ -1,7 +1,7 @@
 # Devin Cloud + Power Apps starter kit
 
-Build Power Apps canvas apps with Devin cloud or the Devin CLI. Devin syncs the app's
-source, edits and validates `.pa.yaml`, and pushes the result into Power Apps Studio.
+Build Power Apps canvas apps with Devin cloud or the Devin CLI. Devin downloads the app's
+source, edits and validates `.pa.yaml`, and applies the result through Power Apps Studio.
 
 Demo of a finished app (a KYC review queue):
 
@@ -52,8 +52,8 @@ plugin are active.
 
 Microsoft sign-in or MFA may appear in the Desktop browser. Complete it there; never paste
 passwords, tokens, or connection strings into chat. Devin parses the environment and app
-IDs from the Studio URL, connects the MCP server, syncs the app, compiles changes, and
-syncs them back to the live Studio tab.
+IDs from the Studio URL, connects the MCP server, downloads the current app, and applies
+the compiled changes to the live Studio session.
 
 ## Local Devin CLI setup
 
@@ -119,7 +119,7 @@ Devin will:
 2. Sync the current app state to `kyc-example/generated`.
 3. Write one `.pa.yaml` file per screen plus `App.pa.yaml`.
 4. Compile, fix errors, and repeat until clean.
-5. Sync the finished app into your open Studio tab.
+5. Apply the compiled app to your open Studio session.
 
 ### 6. Test the app
 
@@ -153,5 +153,5 @@ Copy `kyc-example/PROMPT.md`, keep the top section (connection values and the li
 - **Server does not start.** Run `dotnet --list-sdks`. You need a 10.x entry. Check `DOTNET_ROOT` points to where you installed it, then re-run `./connect.sh` so the config picks up the right path.
 - **Devin says the canvas-authoring tools are missing.** Run `./connect.sh` again, and start Devin from the repo root so it picks up `.devin/mcp_config.json`.
 - **Sign-in fails with 401 or 403.** Devin retries once with the account picker. Pick the account that owns the Power Apps environment.
-- **App does not appear in Studio, or compile reports odd errors like "PowerAppsTheme isn't recognized".** The Studio tab was closed. Compile and sync only work with a live coauthoring session. Reopen the app in Studio, make sure Coauthoring is on, and retry.
+- **App does not appear in Studio, or compile reports odd errors like "PowerAppsTheme isn't recognized".** The Studio tab was closed. Compile and download sync only work with a live coauthoring session. Reopen the app in Studio, make sure Coauthoring is on, and retry.
 - **Compile errors.** Devin fixes them itself. If it stops with errors left, read `skills/power-apps-canvas-authoring/SKILL.md` section 7. Every known error is listed with its fix.
