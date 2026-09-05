@@ -388,6 +388,20 @@ class KycRequestViewsTests(TestCase):
         self.assertContains(response, "Riley High")
         self.assertNotContains(response, "<html")
 
+    def test_shared_component_slots_render_on_the_login_and_dashboard_pages(self):
+        login_response = self.client.get(reverse("login"))
+        self.client.force_login(self.reviewer)
+        dashboard_response = self.client.get(
+            reverse("kyc:show_kyc_review_dashboard")
+        )
+
+        self.assertContains(login_response, 'data-slot="card"')
+        self.assertContains(login_response, 'data-slot="button"')
+        self.assertContains(dashboard_response, 'data-slot="card"')
+        self.assertContains(dashboard_response, 'data-slot="select-trigger"')
+        self.assertContains(dashboard_response, 'data-slot="table"')
+        self.assertContains(dashboard_response, 'data-slot="badge"')
+
     def test_filter_forms_replace_the_current_url_without_stale_history_entries(
         self,
     ):

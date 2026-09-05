@@ -3,37 +3,39 @@
 {% block title %}History · KYC Review Queue{% endblock %}
 
 {% block content %}
-  <div class="page-heading">
-    <div>
-      <p class="eyebrow">Audit-ready decisions</p>
-      <h1>Review history</h1>
-      <p class="muted">Browse completed KYC decisions, newest first.</p>
-    </div>
-    <a class="button button-secondary" href="{% url 'kyc:show_kyc_review_dashboard' %}">Back to dashboard</a>
-  </div>
+  {% url "kyc:show_kyc_review_dashboard" as dashboard_url %}
+  {% include "components/page_header.html" with eyebrow="Audit-ready decisions" title="Review history" description="Browse completed KYC decisions, newest first." action_url=dashboard_url action_label="Back to dashboard" only %}
 
-  <section class="panel">
-    <form
-      class="filter-form"
-      method="get"
-      hx-get="{% url 'kyc:show_reviewed_kyc_request_history' %}"
-      hx-target="#reviewed-request-results"
-      hx-indicator="#reviewed-request-loading"
-      hx-replace-url="true"
-    >
-      <div>
-        <label for="status-filter">Status</label>
-        <select id="status-filter" name="status" hx-trigger="change">
-          {% for status_filter_option in status_filter_options %}
-            <option value="{{ status_filter_option }}" {% if selected_status_filter == status_filter_option %}selected{% endif %}>{{ status_filter_option }}</option>
-          {% endfor %}
-        </select>
+  <section data-slot="card">
+    <div data-slot="card-header">
+      <h2 data-slot="card-title">Completed reviews</h2>
+      <p data-slot="card-description">Filter decisions by final status.</p>
+      <div data-slot="card-action">
+        <span id="reviewed-request-loading" class="htmx-indicator">Updating history…</span>
       </div>
-      <button class="button button-primary" type="submit">Apply filter</button>
-      <span id="reviewed-request-loading" class="htmx-indicator">Updating history…</span>
-    </form>
-    <div id="reviewed-request-results">
-      {% include "kyc/partials/reviewed_request_results.html" %}
+    </div>
+    <div data-slot="card-content">
+      <form
+        class="filter-form filter-form--compact"
+        method="get"
+        hx-get="{% url 'kyc:show_reviewed_kyc_request_history' %}"
+        hx-target="#reviewed-request-results"
+        hx-indicator="#reviewed-request-loading"
+        hx-replace-url="true"
+      >
+        <div class="form-field">
+          <label for="status-filter">Status</label>
+          <select data-slot="select-trigger" id="status-filter" name="status" hx-trigger="change">
+            {% for status_filter_option in status_filter_options %}
+              <option value="{{ status_filter_option }}" {% if selected_status_filter == status_filter_option %}selected{% endif %}>{{ status_filter_option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% include "components/button.html" with label="Apply filter" button_type="submit" variant="default" only %}
+      </form>
+      <div id="reviewed-request-results">
+        {% include "kyc/partials/reviewed_request_results.html" %}
+      </div>
     </div>
   </section>
 {% endblock %}

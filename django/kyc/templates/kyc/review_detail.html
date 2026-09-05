@@ -3,115 +3,123 @@
 {% block title %}Request {{ selected_kyc_request.kyc_request_id }} · KYC Review Queue{% endblock %}
 
 {% block content %}
-  <div class="page-heading">
-    <div>
-      <p class="eyebrow">Request {{ selected_kyc_request.kyc_request_id }}</p>
-      <h1>{{ selected_kyc_request.customer_name }}</h1>
-      <p class="muted">Review the full submission before recording a decision.</p>
+  {% url "kyc:show_kyc_review_dashboard" as dashboard_url %}
+  {% include "components/page_header.html" with eyebrow="Request "|add:selected_kyc_request.kyc_request_id title=selected_kyc_request.customer_name description="Review the full submission before recording a decision." action_url=dashboard_url action_label="Back to dashboard" only %}
+
+  <section data-slot="card">
+    <div data-slot="card-header">
+      <h2 data-slot="card-title">Identity check</h2>
+      <p data-slot="card-description">Submitted customer data and review state.</p>
     </div>
-    <a class="button button-secondary" href="{% url 'kyc:show_kyc_review_dashboard' %}">Back to dashboard</a>
-  </div>
+    <div data-slot="card-content">
+      <dl class="detail-grid">
+        <div class="detail-item">
+          <dt>Human-readable id</dt>
+          <dd>{{ selected_kyc_request.kyc_request_id }}</dd>
+        </div>
+        <div class="detail-item">
+          <dt>Customer name</dt>
+          <dd>{{ selected_kyc_request.customer_name }}</dd>
+        </div>
+        <div class="detail-item">
+          <dt>Customer email</dt>
+          <dd>{{ selected_kyc_request.customer_email }}</dd>
+        </div>
+        <div class="detail-item">
+          <dt>Risk score</dt>
+          <dd>
+            {% include "components/badge.html" with label=risk_band detail=selected_kyc_request.risk_score suffix="/10" variant=risk_band|lower only %}
+          </dd>
+        </div>
+        <div class="detail-item">
+          <dt>Submission date</dt>
+          <dd>{{ selected_kyc_request.submission_date|date:"F j, Y" }}</dd>
+        </div>
+        <div class="detail-item">
+          <dt>Status</dt>
+          <dd>{{ selected_kyc_request.status }}</dd>
+        </div>
+        <div class="detail-item">
+          <dt>Reviewer notes</dt>
+          <dd>{{ selected_kyc_request.reviewer_notes|default:"—" }}</dd>
+        </div>
+        <div class="detail-item">
+          <dt>Reviewed by</dt>
+          <dd>{{ selected_kyc_request.reviewed_by|default:"—" }}</dd>
+        </div>
+        <div class="detail-item">
+          <dt>Reviewed date</dt>
+          <dd>{{ selected_kyc_request.reviewed_date|date:"F j, Y, g:i a"|default:"—" }}</dd>
+        </div>
+      </dl>
 
-  <section class="panel">
-    <dl class="detail-grid">
-      <div class="detail-item">
-        <dt>Human-readable id</dt>
-        <dd>{{ selected_kyc_request.kyc_request_id }}</dd>
-      </div>
-      <div class="detail-item">
-        <dt>Customer name</dt>
-        <dd>{{ selected_kyc_request.customer_name }}</dd>
-      </div>
-      <div class="detail-item">
-        <dt>Customer email</dt>
-        <dd>{{ selected_kyc_request.customer_email }}</dd>
-      </div>
-      <div class="detail-item">
-        <dt>Risk score</dt>
-        <dd>
-          <span class="badge badge-{{ risk_band|lower }}">{{ risk_band }} · {{ selected_kyc_request.risk_score }}/10</span>
-        </dd>
-      </div>
-      <div class="detail-item">
-        <dt>Submission date</dt>
-        <dd>{{ selected_kyc_request.submission_date|date:"F j, Y" }}</dd>
-      </div>
-      <div class="detail-item">
-        <dt>Status</dt>
-        <dd>{{ selected_kyc_request.status }}</dd>
-      </div>
-      <div class="detail-item">
-        <dt>Reviewer notes</dt>
-        <dd>{{ selected_kyc_request.reviewer_notes|default:"—" }}</dd>
-      </div>
-      <div class="detail-item">
-        <dt>Reviewed by</dt>
-        <dd>{{ selected_kyc_request.reviewed_by|default:"—" }}</dd>
-      </div>
-      <div class="detail-item">
-        <dt>Reviewed date</dt>
-        <dd>{{ selected_kyc_request.reviewed_date|date:"F j, Y, g:i a"|default:"—" }}</dd>
-      </div>
-    </dl>
+      {% if selected_kyc_request.status == "Pending" %}
+        <form
+          class="stacked-form decision-form"
+          method="post"
+          action="{% url 'kyc:submit_kyc_request_decision' selected_kyc_request.kyc_request_id %}"
+        >
+          {% csrf_token %}
+          {% if decision_form.non_field_errors %}
+            {% for error in decision_form.non_field_errors %}
+              {% include "components/alert.html" with description=error variant="destructive" only %}
+            {% endfor %}
+          {% endif %}
 
-    {% if selected_kyc_request.status == "Pending" %}
-      <form
-        class="stacked-form"
-        method="post"
-        action="{% url 'kyc:submit_kyc_request_decision' selected_kyc_request.kyc_request_id %}"
-      >
-        {% csrf_token %}
-        {% if decision_form.non_field_errors %}
-          <div class="message message-error">
-            {% for error in decision_form.non_field_errors %}{{ error }}{% endfor %}
-          </div>
-        {% endif %}
-
-        <label for="{{ decision_form.reviewer_notes.id_for_label }}">{{ decision_form.reviewer_notes.label }}</label>
-        {{ decision_form.reviewer_notes }}
-        {% for error in decision_form.reviewer_notes.errors %}
-          <p class="field-error">{{ error }}</p>
-        {% endfor %}
-
-        {% if confirmation_action == "approve" %}
-          <div class="action-panel">
-            <h2>Confirm high-risk approval</h2>
-            <p>This request is high risk. Enter a supervisor email and confirm the approval.</p>
-            <label for="{{ decision_form.supervisor_email.id_for_label }}">{{ decision_form.supervisor_email.label }}</label>
-            {{ decision_form.supervisor_email }}
-            {% for error in decision_form.supervisor_email.errors %}
+          <div class="form-field">
+            <label for="{{ decision_form.reviewer_notes.id_for_label }}">{{ decision_form.reviewer_notes.label }}</label>
+            {{ decision_form.reviewer_notes }}
+            {% for error in decision_form.reviewer_notes.errors %}
               <p class="field-error">{{ error }}</p>
             {% endfor %}
-            <input type="hidden" name="decision" value="approve">
-            <input type="hidden" name="confirmation" value="confirmed">
-            <div class="button-row">
-              <button class="button button-accent" type="submit">Confirm approval</button>
-              <a class="button button-secondary" href="{% url 'kyc:show_kyc_request_review_detail' selected_kyc_request.kyc_request_id %}">Cancel</a>
-            </div>
           </div>
-        {% elif confirmation_action == "reject" %}
-          <div class="action-panel">
-            <h2>Confirm rejection</h2>
-            <p>Rejecting this request is final. Confirm that the reviewer notes explain the decision.</p>
-            <input type="hidden" name="decision" value="reject">
-            <input type="hidden" name="confirmation" value="confirmed">
-            <div class="button-row">
-              <button class="button button-danger" type="submit">Confirm rejection</button>
-              <a class="button button-secondary" href="{% url 'kyc:show_kyc_request_review_detail' selected_kyc_request.kyc_request_id %}">Cancel</a>
+
+          {% if confirmation_action == "approve" %}
+            <div class="confirmation-card">
+              <h2>Confirm high-risk approval</h2>
+              <p class="muted">This request is high risk. Enter a supervisor email and confirm the approval.</p>
+              <div class="form-field">
+                <label for="{{ decision_form.supervisor_email.id_for_label }}">{{ decision_form.supervisor_email.label }}</label>
+                {{ decision_form.supervisor_email }}
+                {% for error in decision_form.supervisor_email.errors %}
+                  <p class="field-error">{{ error }}</p>
+                {% endfor %}
+              </div>
+              <input type="hidden" name="decision" value="approve">
+              <input type="hidden" name="confirmation" value="confirmed">
+              <div class="button-row">
+                {% include "components/button.html" with label="Confirm approval" button_type="submit" variant="default" only %}
+                {% url "kyc:show_kyc_request_review_detail" selected_kyc_request.kyc_request_id as detail_url %}
+                {% include "components/button_link.html" with href=detail_url label="Cancel" variant="outline" only %}
+              </div>
             </div>
-          </div>
-        {% else %}
-          {% if request_requires_supervisor_approval %}
-            <p class="muted">Approval requires a confirmation step and supervisor email because this request is high risk.</p>
+          {% elif confirmation_action == "reject" %}
+            <div class="confirmation-card">
+              <h2>Confirm rejection</h2>
+              <p class="muted">Rejecting this request is final. Confirm that the reviewer notes explain the decision.</p>
+              <input type="hidden" name="decision" value="reject">
+              <input type="hidden" name="confirmation" value="confirmed">
+              <div class="button-row">
+                {% include "components/button.html" with label="Confirm rejection" button_type="submit" variant="destructive" only %}
+                {% url "kyc:show_kyc_request_review_detail" selected_kyc_request.kyc_request_id as detail_url %}
+                {% include "components/button_link.html" with href=detail_url label="Cancel" variant="outline" only %}
+              </div>
+            </div>
+          {% else %}
+            {% if request_requires_supervisor_approval %}
+              <p class="muted">Approval requires a confirmation step and supervisor email because this request is high risk.</p>
+            {% endif %}
+            <div class="button-row">
+              {% include "components/button.html" with label="Approve" button_type="submit" name="decision" value="approve" variant="default" only %}
+              {% include "components/button.html" with label="Reject" button_type="submit" name="decision" value="reject" variant="destructive" only %}
+            </div>
           {% endif %}
-          <div class="button-row">
-            <button class="button button-accent" type="submit" name="decision" value="approve">Approve</button>
-            <button class="button button-danger" type="submit" name="decision" value="reject">Reject</button>
-          </div>
-        {% endif %}
-      </form>
-    {% else %}
-      <div class="message">This request has already been reviewed. Its decision is read-only.</div>
-    {% endif %}
+        </form>
+      {% else %}
+        <div class="decision-form">
+          {% include "components/alert.html" with description="This request has already been reviewed. Its decision is read-only." variant="default" only %}
+        </div>
+      {% endif %}
+    </div>
   </section>
 {% endblock %}

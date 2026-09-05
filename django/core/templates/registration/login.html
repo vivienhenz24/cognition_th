@@ -3,21 +3,31 @@
 {% block title %}Sign in · KYC Review Queue{% endblock %}
 
 {% block content %}
-  <section class="login-card">
-    <p class="eyebrow">Restricted internal tool</p>
-    <h1>Sign in to review KYC requests</h1>
-    <p class="muted">Use a seeded reviewer or supervisor account.</p>
-    {% if form.errors %}
-      <div class="message message-error">The username or password was not recognized.</div>
-    {% endif %}
-    <form method="post" class="stacked-form">
-      {% csrf_token %}
-      <label for="{{ form.username.id_for_label }}">Username</label>
-      {{ form.username }}
-      <label for="{{ form.password.id_for_label }}">Password</label>
-      {{ form.password }}
-      <button class="button button-primary" type="submit">Sign in</button>
-      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-    </form>
-  </section>
+  <div class="login-layout">
+    <section data-slot="card" class="login-card">
+      <div data-slot="card-header">
+        <p class="eyebrow">Restricted internal tool</p>
+        <h1 data-slot="card-title">Sign in to review KYC requests</h1>
+        <p data-slot="card-description">Use a seeded reviewer or supervisor account.</p>
+      </div>
+      <div data-slot="card-content">
+        {% if form.errors %}
+          {% include "components/alert.html" with description="The username or password was not recognized." variant="destructive" only %}
+        {% endif %}
+        <form method="post" class="stacked-form">
+          {% csrf_token %}
+          <div class="form-field">
+            <label for="{{ form.username.id_for_label }}">Username</label>
+            {{ form.username }}
+          </div>
+          <div class="form-field">
+            <label for="{{ form.password.id_for_label }}">Password</label>
+            {{ form.password }}
+          </div>
+          {% include "components/button.html" with label="Sign in" button_type="submit" variant="default" only %}
+          {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        </form>
+      </div>
+    </section>
+  </div>
 {% endblock %}

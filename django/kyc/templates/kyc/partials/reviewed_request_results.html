@@ -1,31 +1,30 @@
 {% if reviewed_requests %}
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Reference</th>
-          <th>Customer</th>
-          <th>Status</th>
-          <th>Reviewer</th>
-          <th>Reviewed</th>
+  <div data-slot="table-container">
+    <table data-slot="table">
+      <thead data-slot="table-header">
+        <tr data-slot="table-row">
+          <th data-slot="table-head">Reference</th>
+          <th data-slot="table-head">Customer</th>
+          <th data-slot="table-head">Status</th>
+          <th data-slot="table-head">Reviewer</th>
+          <th data-slot="table-head">Reviewed</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody data-slot="table-body">
         {% for reviewed_request in reviewed_requests %}
-          <tr>
-            <td>{{ reviewed_request.kyc_request_id }}</td>
-            <td>{{ reviewed_request.customer_name }}</td>
-            <td><span class="badge badge-{{ reviewed_request.status|lower }}">{{ reviewed_request.status }}</span></td>
-            <td>{{ reviewed_request.reviewed_by }}</td>
-            <td>{{ reviewed_request.reviewed_date|date:"M j, Y, g:i a" }}</td>
+          <tr data-slot="table-row">
+            <td data-slot="table-cell">{{ reviewed_request.kyc_request_id }}</td>
+            <td data-slot="table-cell">{{ reviewed_request.customer_name }}</td>
+            <td data-slot="table-cell">
+              {% include "components/badge.html" with label=reviewed_request.status variant=reviewed_request.status|lower only %}
+            </td>
+            <td data-slot="table-cell">{{ reviewed_request.reviewed_by }}</td>
+            <td data-slot="table-cell">{{ reviewed_request.reviewed_date|date:"M j, Y, g:i a" }}</td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 {% else %}
-  <div class="empty-state">
-    <h3>No reviewed requests match this filter</h3>
-    <p>Choose another status or return to the dashboard.</p>
-  </div>
+  {% include "components/empty_state.html" with title="No reviewed requests match this filter" description="Choose another status or return to the dashboard." only %}
 {% endif %}

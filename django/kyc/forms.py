@@ -7,6 +7,7 @@ class KycRequestDecisionForm(forms.Form):
         label="Reviewer notes",
         widget=forms.Textarea(
             attrs={
+                "data-slot": "textarea",
                 "placeholder": "Record the evidence and reasoning for this decision.",
             }
         ),
@@ -16,6 +17,7 @@ class KycRequestDecisionForm(forms.Form):
         label="Supervisor email",
         widget=forms.EmailInput(
             attrs={
+                "data-slot": "input",
                 "placeholder": "supervisor@example.com",
             }
         ),
