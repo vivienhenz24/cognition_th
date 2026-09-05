@@ -30,6 +30,10 @@ def build_pending_request_rows_for_template(pending_requests):
     ]
 
 
+def request_is_partial_htmx_update(request):
+    return request.htmx and not request.htmx.history_restore_request
+
+
 def show_kyc_review_dashboard(request):
     selected_risk_band = request.GET.get("risk_band", "All")
     customer_name_search = request.GET.get("name_search", "")
@@ -46,7 +50,7 @@ def show_kyc_review_dashboard(request):
         "customer_name_search": customer_name_search,
         "risk_band_options": ["All", "Low", "Medium", "High"],
     }
-    if request.htmx:
+    if request_is_partial_htmx_update(request):
         return render(request, "kyc/partials/pending_request_results.html", context)
     return render(request, "kyc/dashboard.html", context)
 
@@ -207,7 +211,7 @@ def show_reviewed_kyc_request_history(request):
         "selected_status_filter": selected_status_filter,
         "status_filter_options": ["All", "Approved", "Rejected"],
     }
-    if request.htmx:
+    if request_is_partial_htmx_update(request):
         return render(
             request,
             "kyc/partials/reviewed_request_results.html",

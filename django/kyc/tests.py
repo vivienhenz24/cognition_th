@@ -388,6 +388,27 @@ class KycRequestViewsTests(TestCase):
         self.assertContains(response, "Riley High")
         self.assertNotContains(response, "<html")
 
+    def test_htmx_history_restore_returns_complete_pages_for_browser_navigation(
+        self,
+    ):
+        self.client.force_login(self.reviewer)
+
+        dashboard_response = self.client.get(
+            reverse("kyc:show_kyc_review_dashboard"),
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_HISTORY_RESTORE_REQUEST="true",
+        )
+        history_response = self.client.get(
+            reverse("kyc:show_reviewed_kyc_request_history"),
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_HISTORY_RESTORE_REQUEST="true",
+        )
+
+        self.assertContains(dashboard_response, "<html")
+        self.assertContains(dashboard_response, "KYC review totals")
+        self.assertContains(history_response, "<html")
+        self.assertContains(history_response, "Completed reviews")
+
     def test_shared_component_slots_render_on_the_login_and_dashboard_pages(self):
         login_response = self.client.get(reverse("login"))
         self.client.force_login(self.reviewer)
