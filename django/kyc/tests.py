@@ -388,6 +388,23 @@ class KycRequestViewsTests(TestCase):
         self.assertContains(response, "Riley High")
         self.assertNotContains(response, "<html")
 
+    def test_filter_forms_replace_the_current_url_without_stale_history_entries(
+        self,
+    ):
+        self.client.force_login(self.reviewer)
+
+        dashboard_response = self.client.get(
+            reverse("kyc:show_kyc_review_dashboard")
+        )
+        history_response = self.client.get(
+            reverse("kyc:show_reviewed_kyc_request_history")
+        )
+
+        self.assertContains(dashboard_response, 'hx-replace-url="true"')
+        self.assertNotContains(dashboard_response, "hx-push-url")
+        self.assertContains(history_response, 'hx-replace-url="true"')
+        self.assertNotContains(history_response, "hx-push-url")
+
     def test_review_detail_shows_every_request_field_and_risk_badge(self):
         self.client.force_login(self.reviewer)
 
