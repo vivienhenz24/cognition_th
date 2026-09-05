@@ -3,69 +3,57 @@
 {% block title %}Dashboard · KYC Review Queue{% endblock %}
 
 {% block content %}
-  <div class="page-heading">
-    <div>
-      <p class="eyebrow">Compliance operations</p>
-      <h1>Review dashboard</h1>
-      <p class="muted">Prioritize pending identity checks by risk and submission date.</p>
-    </div>
-    <a class="button button-secondary" href="{% url 'kyc:show_reviewed_kyc_request_history' %}">View history</a>
-  </div>
+  {% url "kyc:show_reviewed_kyc_request_history" as history_url %}
+  {% include "components/page_header.html" with eyebrow="Compliance operations" title="Review dashboard" description="Prioritize pending identity checks by risk and submission date." action_url=history_url action_label="View history" only %}
 
   <section class="kpi-grid" aria-label="KYC review totals">
-    <article class="kpi-card">
-      <span class="muted">Pending</span>
-      <strong>{{ dashboard_totals.pending_count }}</strong>
-    </article>
-    <article class="kpi-card">
-      <span class="muted">Approved today</span>
-      <strong>{{ dashboard_totals.approved_today_count }}</strong>
-    </article>
-    <article class="kpi-card">
-      <span class="muted">Rejected today</span>
-      <strong>{{ dashboard_totals.rejected_today_count }}</strong>
-    </article>
+    {% include "components/stat_card.html" with label="Pending" value=dashboard_totals.pending_count only %}
+    {% include "components/stat_card.html" with label="Approved today" value=dashboard_totals.approved_today_count only %}
+    {% include "components/stat_card.html" with label="Rejected today" value=dashboard_totals.rejected_today_count only %}
   </section>
 
-  <section class="panel">
-    <div class="page-heading">
-      <div>
-        <h2>Pending requests</h2>
-        <p class="muted">Select a customer to begin the review.</p>
+  <section data-slot="card">
+    <div data-slot="card-header">
+      <h2 data-slot="card-title">Pending requests</h2>
+      <p data-slot="card-description">Select a customer to begin the review.</p>
+      <div data-slot="card-action">
+        <span id="pending-request-loading" class="htmx-indicator">Updating queue…</span>
       </div>
-      <span id="pending-request-loading" class="htmx-indicator">Updating queue…</span>
     </div>
-    <form
-      class="filter-form"
-      method="get"
-      hx-get="{% url 'kyc:show_kyc_review_dashboard' %}"
-      hx-target="#pending-request-results"
-      hx-indicator="#pending-request-loading"
-      hx-replace-url="true"
-    >
-      <div>
-        <label for="risk-band-filter">Risk band</label>
-        <select id="risk-band-filter" name="risk_band" hx-trigger="change">
-          {% for risk_band_option in risk_band_options %}
-            <option value="{{ risk_band_option }}" {% if selected_risk_band == risk_band_option %}selected{% endif %}>{{ risk_band_option }}</option>
-          {% endfor %}
-        </select>
+    <div data-slot="card-content">
+      <form
+        class="filter-form"
+        method="get"
+        hx-get="{% url 'kyc:show_kyc_review_dashboard' %}"
+        hx-target="#pending-request-results"
+        hx-indicator="#pending-request-loading"
+        hx-replace-url="true"
+      >
+        <div class="form-field">
+          <label for="risk-band-filter">Risk band</label>
+          <select data-slot="select-trigger" id="risk-band-filter" name="risk_band" hx-trigger="change">
+            {% for risk_band_option in risk_band_options %}
+              <option value="{{ risk_band_option }}" {% if selected_risk_band == risk_band_option %}selected{% endif %}>{{ risk_band_option }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="customer-name-search">Customer name</label>
+          <input
+            data-slot="input"
+            id="customer-name-search"
+            type="search"
+            name="name_search"
+            value="{{ customer_name_search }}"
+            placeholder="Search by name"
+            hx-trigger="keyup changed delay:300ms, search"
+          >
+        </div>
+        {% include "components/button.html" with label="Apply filters" button_type="submit" variant="default" only %}
+      </form>
+      <div id="pending-request-results">
+        {% include "kyc/partials/pending_request_results.html" %}
       </div>
-      <div>
-        <label for="customer-name-search">Customer name</label>
-        <input
-          id="customer-name-search"
-          type="search"
-          name="name_search"
-          value="{{ customer_name_search }}"
-          placeholder="Search by name"
-          hx-trigger="keyup changed delay:300ms, search"
-        >
-      </div>
-      <button class="button button-primary" type="submit">Apply filters</button>
-    </form>
-    <div id="pending-request-results">
-      {% include "kyc/partials/pending_request_results.html" %}
     </div>
   </section>
 {% endblock %}

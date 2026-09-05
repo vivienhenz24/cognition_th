@@ -1,0 +1,10 @@
+<div class="page-heading">
+  <div class="page-heading__copy">
+    <p class="eyebrow">{{ eyebrow }}</p>
+    <h1>{{ title }}</h1>
+    <p class="muted">{{ description }}</p>
+  </div>
+  {% if action_url %}
+    {% include "components/button_link.html" with href=action_url label=action_label variant="outline" only %}
+  {% endif %}
+</div>

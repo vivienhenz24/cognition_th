@@ -1,0 +1,8 @@
+<div
+  data-slot="alert"
+  class="{% if variant == 'error' %}ui-alert--destructive{% else %}ui-alert--{{ variant|default:'default' }}{% endif %}"
+  role="alert"
+>
+  {% if title %}<div data-slot="alert-title">{{ title }}</div>{% endif %}
+  <div data-slot="alert-description">{{ description }}</div>
+</div>
